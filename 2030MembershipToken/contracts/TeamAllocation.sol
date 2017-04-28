@@ -5,9 +5,9 @@ import './SafeMath.sol';
 
 contract TeamAllocation {
   using SafeMath for uint;
-  uint256 constant totalAllocations = 600000;
+  uint256 public constant totalAllocations = 600000;
   MembershipToken tta;
-  uint256 unlockedAt;
+  uint256 public unlockedAt;
   mapping (address=>uint256) allocations;
 
   function TeamAllocation() {
@@ -21,5 +21,9 @@ contract TeamAllocation {
     allocations[0x00] =  120000;
     allocations[0x00] =  120000;
     allocations[0x00] =  120000;
+  }
+  
+  function getTotalAllocation()returns(uint256){
+      return totalAllocations;
   }
 }
