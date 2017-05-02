@@ -22,7 +22,7 @@ contract TeamAllocation {
     allocations[0x00] =  120000;
     allocations[0x00] =  120000;
   }
-  
+
   function getTotalAllocation()returns(uint256){
       return totalAllocations;
   }
