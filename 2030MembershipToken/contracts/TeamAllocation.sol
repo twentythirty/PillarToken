@@ -8,9 +8,11 @@ contract TeamAllocation {
   uint256 public constant totalAllocations = 600000;
   MembershipToken tta;
   uint256 public unlockedAt;
-  mapping (address=>uint256) allocations;
+  mapping (address => uint256) allocations;
 
-  function TeamAllocation() {
+  uint256 tokensCreated = 0;
+
+  function TeamAllocation(address _membershipTokenFactory) internal {
     tta = MembershipToken(msg.sender);
     // Locked time of approximately 9 months before team members are able to redeeem tokens.
     unlockedAt = now + 9 * 30 days;
@@ -25,5 +27,20 @@ contract TeamAllocation {
 
   function getTotalAllocation()returns(uint256){
       return totalAllocations;
+  }
+
+  function unlock() external {
+    if (now < unlockedAt) throw;
+
+    if (tokensCreated == 0) {
+      tokensCreated = tta.balanceOf(this);
+    }
+
+    var allocation = allocations[msg.sender];
+    allocations[msg.sender] = 0;
+    var toTransfer = tokensCreated * allocation / totalAllocations;
+
+    // fail if allocation is 0
+    if (!tta.transfer(msg.sender, toTransfer)) throw;
   }
 }

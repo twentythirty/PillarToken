@@ -10,6 +10,8 @@ contract MembershipToken {
 
     string  public constant name = "Twenty Thirty Alpha Club Token";
 
+    TeamAllocation public lockedAllocation;
+
     string  public constant symbol = "TTA";
 
     uint8  public constant decimals = 18;
@@ -18,11 +20,14 @@ contract MembershipToken {
 
     uint256  public constant tokenCreationRate = 50;
 
+    address public membershipTokenFactory;
+
     // Minimum token creation
     uint256 public constant tokenCreationMin = 1000000;
+    uint256 public constant reservedTokensForAllocation = 600000;
 
     //total token - member token
-    uint256  public constant totalTokenOffer = totaNumberOfToken - 600000;
+    uint256  public constant totalTokenOffer = totaNumberOfToken - reservedTokensForAllocation;
 
     uint256 public salePeriod;
 
@@ -37,10 +42,17 @@ contract MembershipToken {
     mapping (address => uint256) balances;
 
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
+    event Refund(address indexed _from,uint256 _value);
 
-    function MembershipToken(){
+    function MembershipToken(address _membershipTokenFactory,
+                              uint256 _fundingStartBlock,
+                              uint256 _fundingStopBlock) {
       //sale peioriod
       salePeriod = now + 16 days;
+
+      membershipTokenFactory = _membershipTokenFactory;
+      fundingStartBlock = _fundingStartBlock;
+      fundingStopBlock = _fundingStopBlock;
     }
 
     function checkSalePeriod() external constant returns (uint256) {
@@ -77,6 +89,21 @@ contract MembershipToken {
       return !fundingMode;
     }
 
+    function transfer(address _to, uint256 _value) returns (bool) {
+        // Abort if not in Operational state.
+        if (fundingMode) throw;
+
+        var senderBalance = balances[msg.sender];
+        if (senderBalance >= _value && _value > 0) {
+            senderBalance -= _value;
+            balances[msg.sender] = senderBalance;
+            balances[_to] += _value;
+            Transfer(msg.sender, _to, _value);
+            return true;
+        }
+        return false;
+    }
+
     function() payable external {
       if(!fundingMode) throw;
       if(block.number < fundingStartBlock) throw;
@@ -97,11 +124,46 @@ contract MembershipToken {
     }
 
     function finalize() external {
-      // continue from here
+      if (!fundingMode) throw;
+      if ((block.number <= fundingStopBlock ||
+        totalTokens < tokenCreationMin) &&
+        totalTokens < totalTokenOffer) throw;
+
+        // switch funding mode off
+        fundingMode = false;
+
+        if (!membershipTokenFactory.send(this.balance)) throw;
+
+        /*uint256 percentOfTotal = */
+        totalTokens += reservedTokensForAllocation;
+        balances[lockedAllocation] += reservedTokensForAllocation;
+        Transfer(0, lockedAllocation, reservedTokensForAllocation);
     }
 
+    function refund() external {
+
+      if(!fundingMode) throw;
+      if(block.number <= fundingStopBlock) throw;
+      if(totalTokens >= tokenCreationMin) throw;
+
+      var ttaValue= balances[msg.sender];
+      if(ttaValue == 0) throw;
+
+      balances[msg.sender] = 0;
+
+      totalTokens -= ttaValue;
+
+      var ethValue = ttaValue / tokenCreationRate;
+      if(!msg.sender.send(ethValue)) throw;
+      Refund(msg.sender, ethValue);
+    }
 }
 
+/* End point*/
+/*Check Token.sol here https://github.com/maraoz/golem-crowdfunding/tree/master/contracts
+
+Check construction function in MembershipToken.sol. There may be variables missing there.
+*/
 
 /*
 Token Name: Twenty Thirty Alpha Club Token
