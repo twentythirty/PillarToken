@@ -1,93 +1,21 @@
 pragma solidity ^0.4.10;
 
 import './TeamAllocation.sol';
+import './ICOFunded.sol';
 import './SafeMath.sol';
+import './MigrationAgent.sol';
 
-contract MembershipToken {
+contract MembershipToken is ICOFunded {
     using SafeMath for uint;
-
-    TeamAllocation tAll;
-
     string  public constant name = "Twenty Thirty Alpha Club Token";
-
-    TeamAllocation public lockedAllocation;
-
     string  public constant symbol = "TTA";
-
     uint8  public constant decimals = 18;
 
-    uint256  public constant totaNumberOfToken = 4000000;
+    address public migrationAgent;
+    address public migrationMaster;
+    uint256 public totalMigrated;
 
-    uint256  public constant tokenCreationRate = 50;
-
-    address public membershipTokenFactory;
-
-    // Minimum token creation
-    uint256 public constant tokenCreationMin = 1000000;
-    uint256 public constant reservedTokensForAllocation = 600000;
-
-    //total token - member token
-    uint256  public constant totalTokenOffer = totaNumberOfToken - reservedTokensForAllocation;
-
-    uint256 public salePeriod;
-
-    uint256 fundingStartBlock;
-    uint256 fundingStopBlock;
-    // flags whether ICO is afoot.
-    bool fundingMode = true;
-
-    //total tokens supply
-    uint256 totalTokens;
-
-    mapping (address => uint256) balances;
-
-    event Transfer(address indexed _from, address indexed _to, uint256 _value);
-    event Refund(address indexed _from,uint256 _value);
-
-    function MembershipToken(address _membershipTokenFactory,
-                              uint256 _fundingStartBlock,
-                              uint256 _fundingStopBlock) {
-      //sale peioriod
-      salePeriod = now + 16 days;
-
-      membershipTokenFactory = _membershipTokenFactory;
-      fundingStartBlock = _fundingStartBlock;
-      fundingStopBlock = _fundingStopBlock;
-    }
-
-    function checkSalePeriod() external constant returns (uint256) {
-      return salePeriod;
-    }
-
-    function totalSupply() external constant returns (uint256) {
-      return totalTokens;
-    }
-
-    function balanceOf(address owner) external constant returns (uint256) {
-      return balances[owner];
-    }
-
-    // ICO
-    function fundingActive() constant external returns (bool){
-      if(!fundingMode) return false;
-
-      if(block.number < fundingStartBlock || block.number > fundingStopBlock || totalTokenOffer >= tokenCreationMin){
-        return false;
-      }
-      return true;
-    }
-
-    function numberOfTokensLeft() constant external returns (uint256) {
-      if (!fundingMode) return 0;
-      if (block.number > fundingStopBlock) {
-        return 0;
-      }
-      return totalTokenOffer - totalTokens;
-    }
-
-    function finalized() constant external returns (bool){
-      return !fundingMode;
-    }
+    event Migrate(address indexed _from, address indexed _to, uint256 _value);
 
     function transfer(address _to, uint256 _value) returns (bool) {
         // Abort if not in Operational state.
@@ -104,58 +32,33 @@ contract MembershipToken {
         return false;
     }
 
-    function() payable external {
-      if(!fundingMode) throw;
-      if(block.number < fundingStartBlock) throw;
-      if(block.number > fundingStopBlock) throw;
-      if(totalTokens >= totalTokenOffer) throw;
+    // token migration
 
-      if (msg.value == 0) throw;
+    function migrate(uint256 _value) external {
+      if (fundingMode) throw;
+      if (migrationAgent == 0) throw;
 
-      var numTokens = msg.value * tokenCreationRate;
-      totalTokens += numTokens;
-      if (totalTokens > totalTokenOffer) throw;
+      if (_value == 0) throw;
+      if (_value > balances[msg.sender]) throw;
 
-      // Assign new tokens to sender
-      balances[msg.sender] += numTokens;
+      balances[msg.sender] -= _value;
+      totalTokens -= _value;
+      totalMigrated += _value;
+      MigrationAgent(migrationAgent).migrateFrom(msg.sender, _value);
 
-      // log token creation event
-      Transfer(0, msg.sender, numTokens);
+      Migrate(msg.sender, migrationAgent, _value);
     }
 
-    function finalize() external {
-      if (!fundingMode) throw;
-      if ((block.number <= fundingStopBlock ||
-        totalTokens < tokenCreationMin) &&
-        totalTokens < totalTokenOffer) throw;
-
-        // switch funding mode off
-        fundingMode = false;
-
-        if (!membershipTokenFactory.send(this.balance)) throw;
-
-        /*uint256 percentOfTotal = */
-        totalTokens += reservedTokensForAllocation;
-        balances[lockedAllocation] += reservedTokensForAllocation;
-        Transfer(0, lockedAllocation, reservedTokensForAllocation);
+    function setMigrationAgent(address _agent) external{
+      if(fundingMode) throw;
+      if(migrationAgent != migrationAgent) throw;
+      if(msg.sender != migrationMaster) throw;
+      migrationAgent = _agent;
     }
 
-    function refund() external {
-
-      if(!fundingMode) throw;
-      if(block.number <= fundingStopBlock) throw;
-      if(totalTokens >= tokenCreationMin) throw;
-
-      var ttaValue= balances[msg.sender];
-      if(ttaValue == 0) throw;
-
-      balances[msg.sender] = 0;
-
-      totalTokens -= ttaValue;
-
-      var ethValue = ttaValue / tokenCreationRate;
-      if(!msg.sender.send(ethValue)) throw;
-      Refund(msg.sender, ethValue);
+    function setMigrationMaster(address _master) external {
+      if(msg.sender != migrationMaster) throw;
+      migrationMaster = _master;
     }
 }
 
