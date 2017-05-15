@@ -1,19 +1,26 @@
 pragma solidity ^0.4.10;
 
-import './MembershipToken.sol';
+import './PillarToken.sol';
 import './SafeMath.sol';
 
 contract TeamAllocation {
   using SafeMath for uint;
-  uint256 public constant totalAllocations = 600000;
-  MembershipToken tta;
+  uint256 public constant totalAllocations = 3000000;
+  PillarToken plr;
   uint256 public unlockedAt;
   mapping (address => uint256) allocations;
 
   uint256 tokensCreated = 0;
 
+  /*
+    Split among team members
+    Tokens reserved for Team: 1,000,000
+    Tokens reserved for 20|30 projects: 1,000,000
+    Tokens reserved for future sale: 1,000,000
+  */
+
   function TeamAllocation(address _membershipTokenFactory) internal {
-    tta = MembershipToken(msg.sender);
+    plr = PillarToken(msg.sender);
     // Locked time of approximately 9 months before team members are able to redeeem tokens.
     unlockedAt = now + 9 * 30 days;
 
@@ -33,7 +40,7 @@ contract TeamAllocation {
     if (now < unlockedAt) throw;
 
     if (tokensCreated == 0) {
-      tokensCreated = tta.balanceOf(this);
+      tokensCreated = plr.balanceOf(this);
     }
 
     var allocation = allocations[msg.sender];
@@ -41,6 +48,6 @@ contract TeamAllocation {
     var toTransfer = tokensCreated * allocation / totalAllocations;
 
     // fail if allocation is 0
-    if (!tta.transfer(msg.sender, toTransfer)) throw;
+    if (!plr.transfer(msg.sender, toTransfer)) throw;
   }
 }
