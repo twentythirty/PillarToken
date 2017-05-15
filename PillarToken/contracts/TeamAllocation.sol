@@ -1,4 +1,4 @@
-pragma solidity ^0.4.10;
+pragma solidity ^0.4.8;
 
 import './PillarToken.sol';
 import './SafeMath.sol';

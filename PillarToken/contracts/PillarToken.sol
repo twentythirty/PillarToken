@@ -1,53 +1,61 @@
-pragma solidity ^0.4.10;
+pragma solidity ^0.4.8;
 
 import './TeamAllocation.sol';
-import './ERC20.sol';
+import './ERC20Interface.sol';
 import './SafeMath.sol';
 import './MigrationAgent.sol';
 
-contract PillarToken {
+contract PillarToken is ERC20Interface {
 
     using SafeMath for uint;
-    string  public constant name = "PILLAR";
-    string  public constant symbol = "PLR";
-    uint8  public constant decimals = 18;
+    string public constant name = "PILLAR";
+    string public constant symbol = "PLR";
+    //uint8 costs more gas than uint246/uint so changed the data type
+    uint public constant decimals = 18;
 
     address public migrationAgent;
     address public migrationMaster;
-    uint256 public totalMigrated;
+    uint public totalMigrated;
 
     TeamAllocation tAll;
     TeamAllocation public lockedAllocation;
 
-    uint256  public constant totaNumberOfToken = 10000000;
+    uint  public constant totalNumberOfTokens = 10000000;
 
     /* Check ETH/USD rate on the day of the ICO */
-    /* 1 ETH = 88 USD ; 1/88 in WEI */
-    uint256  public constant tokenCreationRate = 11363636363637;
+    /* 1 ETH = 88 USD ; 1/88 of USD expressed in WEI */
+    // Need to revisit this value at later point
+    uint public constant tokenPrice  = 11363636363637 wei;
 
+    //address corresponding to the pillar token factory where the fund raised will be held.
     address public pillarTokenFactory;
 
     // Minimum token creation
-    uint256 public constant tokenCreationMin = 2000000;
-    uint256 public constant reservedTokensForAllocation = 3000000;
+    uint public constant minTokensForSale = 2000000;
+    //tokens reserved for team.
+    uint public constant tokensReservedForTeam = 300000;
+    //tokens reserved for 20|30 projects
+    uint public constant tokensReservedFor2030Projects = 1000000;
+    //tokens reserved for future sale
+    uint public constant tokensForFutureSale = 1700000;
+    //total tokens available for sale
+    uint public constant tokensAvailableForSale = (totalNumberOfTokens - (tokensReservedForTeam + tokensReservedFor2030Projects + tokensForFutureSale));
+    //Sale Period
+    uint public salePeriod;
 
-    //total token offer is thus 7,000,000
-    uint256  public constant totalTokenOffer = totaNumberOfToken - reservedTokensForAllocation;
-
-    uint256 public salePeriod;
-
-    uint256 fundingStartBlock;
-    uint256 fundingStopBlock;
+    uint fundingStartBlock;
+    uint fundingStopBlock;
 
     // flags whether ICO is afoot.
     bool fundingMode = true;
 
-    //total tokens supply
-    uint256 totalTokens;
+    //total used tokens
+    uint totalUsedTokens;
 
     mapping (address => uint256) balances;
 
-    event Transfer(address indexed _from, address indexed _to, uint256 _value);
+    //event Approval(address indexed _owner, address indexed _spender,uint _value);
+    //event Transfer(address indexed _from, address indexed _to, uint256 _value);
     event Refund(address indexed _from,uint256 _value);
     event Migrate(address indexed _from, address indexed _to, uint256 _value);
 
@@ -60,25 +68,52 @@ contract PillarToken {
       migrationMaster = _migrationMaster;
       fundingStartBlock = _fundingStartBlock;
       fundingStopBlock = _fundingStopBlock;
+      totalUsedTokens = 0;
     }
 
-    function checkSalePeriod() external constant returns (uint256) {
+    /*
+    * Function used to validate conditions in case the contract is called with incorrect data
+    */
+    function() payable external {
+      if(!fundingMode) throw;
+      if(now > salePeriod) throw;
+      if(block.number < fundingStartBlock) throw;
+      if(block.number > fundingStopBlock) throw;
+      if(totalUsedTokens >= tokensAvailableForSale) throw;
+
+      if (msg.value == 0) throw;
+
+      //total tokens purchased is received gas/cost of 1 token
+      var numTokens = msg.value / tokenPrice;
+      totalUsedTokens += numTokens;
+      if (totalUsedTokens > tokensAvailableForSale) throw;
+
+      // Assign new tokens to sender
+      balances[msg.sender] += numTokens;
+      // log token creation event
+      Transfer(0, msg.sender, numTokens);
+    }
+
+    function checkSalePeriod() external constant returns (uint) {
       return salePeriod;
     }
 
-    function totalSupply() external constant returns (uint256) {
-      return totalTokens;
+    function totalSupply() constant returns (uint totalSupply) {
+      //return totalTokens;
+      totalSupply = tokensAvailableForSale;
     }
 
-    function balanceOf(address owner) external constant returns (uint256) {
-      return balances[owner];
+    function balanceOf(address owner) constant returns (uint balance) {
+      //return balances[owner];
+      balance = balances[owner];
     }
 
     // ICO
     function fundingActive() constant external returns (bool){
       if(!fundingMode) return false;
 
-      if(block.number < fundingStartBlock || block.number > fundingStopBlock || totalTokenOffer >= tokenCreationMin){
+      //Shouldn't this be total tokensAvailableForSale? Earlier the check was against minTokensForSale
+      if(block.number < fundingStartBlock || block.number > fundingStopBlock || totalUsedTokens > tokensAvailableForSale){
         return false;
       }
       return true;
@@ -89,38 +124,18 @@ contract PillarToken {
       if (block.number > fundingStopBlock) {
         return 0;
       }
-      return totalTokenOffer - totalTokens;
+      return (tokensAvailableForSale - totalUsedTokens);
     }
 
     function isFinalized() constant external returns (bool){
       return !fundingMode;
     }
 
-    function() payable external {
-      if(!fundingMode) throw;
-      if(now > salePeriod) throw;
-      if(block.number < fundingStartBlock) throw;
-      if(block.number > fundingStopBlock) throw;
-      if(totalTokens >= totalTokenOffer) throw;
-
-      if (msg.value == 0) throw;
-
-      var numTokens = msg.value * tokenCreationRate;
-      totalTokens += numTokens;
-      if (totalTokens > totalTokenOffer) throw;
-
-      // Assign new tokens to sender
-      balances[msg.sender] += numTokens;
-
-      // log token creation event
-      Transfer(0, msg.sender, numTokens);
-    }
-
     function finalize() external {
       if (!fundingMode) throw;
       if ((block.number <= fundingStopBlock ||
-        totalTokens < tokenCreationMin) &&
-        totalTokens < totalTokenOffer) throw;
+        totalUsedTokens < minTokensForSale) &&
+        totalUsedTokens < tokensAvailableForSale) throw;
 
         // switch funding mode off
         fundingMode = false;
@@ -128,25 +143,26 @@ contract PillarToken {
         if (!pillarTokenFactory.send(this.balance)) throw;
 
         /*uint256 percentOfTotal = */
-        totalTokens += reservedTokensForAllocation;
-        balances[lockedAllocation] += reservedTokensForAllocation;
-        Transfer(0, lockedAllocation, reservedTokensForAllocation);
+        // Shouldn't this reflect all of the remaining tokens and not just the 300,000?
+        totalUsedTokens += tokensReservedForTeam;
+        balances[lockedAllocation] += tokensReservedForTeam;
+        Transfer(0, lockedAllocation, tokensReservedForTeam);
     }
 
     function refund() external {
 
       if(!fundingMode) throw;
       if(block.number <= fundingStopBlock) throw;
-      if(totalTokens >= tokenCreationMin) throw;
+      if(totalUsedTokens >= minTokensForSale) throw;
 
       var ttaValue= balances[msg.sender];
       if(ttaValue == 0) throw;
 
       balances[msg.sender] = 0;
 
-      totalTokens -= ttaValue;
+      totalUsedTokens -= ttaValue;
 
-      var ethValue = ttaValue / tokenCreationRate;
+      var ethValue = ttaValue / tokenPrice;
       if(!msg.sender.send(ethValue)) throw;
       Refund(msg.sender, ethValue);
     }
@@ -175,7 +191,7 @@ contract PillarToken {
       if (_value > balances[msg.sender]) throw;
 
       balances[msg.sender] -= _value;
-      totalTokens -= _value;
+      totalUsedTokens -= _value;
       totalMigrated += _value;
       MigrationAgent(migrationAgent).migrateFrom(msg.sender, _value);
 
@@ -193,6 +209,11 @@ contract PillarToken {
       if(msg.sender != migrationMaster) throw;
       migrationMaster = _master;
     }
+
+    /* As per the discussion with David in todays ICO call, there is a requirement for two new methods
+    * that will allow David, Michael etc to transfer token to different ethereum wallets
+    * for donations received through fiat or non crypto currencies
+    */
 }
 
 /* Check Token.sol here https://github.com/maraoz/golem-crowdfunding/tree/master/contracts
