@@ -61,6 +61,16 @@ contract PillarToken is ERC20Interface {
     event Refund(address indexed _from,uint256 _value);
     event Migrate(address indexed _from, address indexed _to, uint256 _value);
 
+    modifier isFundingModeStart() {
+        if (fundingMode) throw;
+        _;
+    }
+
+    modifier isFundingModeStop() {
+        if (!fundingMode) throw;
+        _;
+    }
+
     function PillarToken(address _pillarTokenFactory, uint256 _fundingStartBlock, uint256 _fundingStopBlock, address _migrationMaster) {
 
       //sale peioriod
@@ -76,8 +86,8 @@ contract PillarToken is ERC20Interface {
     /*
     * Function used to validate conditions in case the contract is called with incorrect data
     */
-    function() payable external {
-      if(!fundingMode) throw;
+    function() payable isFundingModeStop external {
+//      if(!fundingMode) throw;
       if(now > salePeriod) throw;
       if(block.number < fundingStartBlock) throw;
       if(block.number > fundingStopBlock) throw;
@@ -111,8 +121,8 @@ contract PillarToken is ERC20Interface {
     }
 
     // ICO
-    function fundingActive() constant external returns (bool){
-      if(!fundingMode) return false;
+    function fundingActive() constant isFundingModeStop external returns (bool){
+//      if(!fundingMode) return false;
 
       //Shouldn't this be total tokensAvailableForSale? Earlier the check was against minTokensForSale
       if(block.number < fundingStartBlock || block.number > fundingStopBlock || totalUsedTokens > tokensAvailableForSale){
@@ -121,8 +131,8 @@ contract PillarToken is ERC20Interface {
       return true;
     }
 
-    function numberOfTokensLeft() constant external returns (uint256) {
-      if (!fundingMode) return 0;
+    function numberOfTokensLeft() isFundingModeStop constant external returns (uint256) {
+//      if (!fundingMode) return 0;
       if (block.number > fundingStopBlock) {
         return 0;
       }
@@ -133,8 +143,8 @@ contract PillarToken is ERC20Interface {
       return !fundingMode;
     }
 
-    function finalize() external {
-      if (!fundingMode) throw;
+    function finalize() isFundingModeStop external {
+//      if (!fundingMode) throw;
       if ((block.number <= fundingStopBlock ||
         totalUsedTokens < minTokensForSale) &&
         totalUsedTokens < tokensAvailableForSale) throw;
@@ -151,9 +161,9 @@ contract PillarToken is ERC20Interface {
         Transfer(0, lockedAllocation, totalAllocationTokens);
     }
 
-    function refund() external {
+    function refund() isFundingModeStop external {
 
-      if(!fundingMode) throw;
+//      if(!fundingMode) throw;
       if(block.number <= fundingStopBlock) throw;
       if(totalUsedTokens >= minTokensForSale) throw;
 
@@ -170,9 +180,9 @@ contract PillarToken is ERC20Interface {
     }
 
 
-    function transfer(address _to, uint256 _value) returns (bool) {
+    function transfer(address _to, uint256 _value) isFundingModeStart returns (bool) {
         // Abort if not in Operational state.
-        if (fundingMode) throw;
+//        if (fundingMode) throw;
 
         uint senderBalance = balances[msg.sender];
         if (senderBalance >= _value && _value > 0) {
@@ -210,8 +220,8 @@ contract PillarToken is ERC20Interface {
     }
 
     // token migration
-    function migrate(uint256 _value) external {
-      if (fundingMode) throw;
+    function migrate(uint256 _value) isFundingModeStart external {
+//      if (fundingMode) throw;
       if (migrationAgent == 0) throw;
 
       if (_value == 0) throw;
@@ -225,8 +235,8 @@ contract PillarToken is ERC20Interface {
       Migrate(msg.sender, migrationAgent, _value);
     }
 
-    function setMigrationAgent(address _agent) external{
-      if(fundingMode) throw;
+    function setMigrationAgent(address _agent) isFundingModeStart external{
+//      if(fundingMode) throw;
       if(migrationAgent != migrationAgent) throw;
       if(msg.sender != migrationMaster) throw;
       migrationAgent = _agent;

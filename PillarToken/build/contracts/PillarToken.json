@@ -525,5 +525,6 @@
   ],
   "networks": {},
   "schema_version": "0.0.5",
-  "updated_at": 1494942665630
+  "updated_at": 1494943779237,
+  "unlinked_binary": "0x"
 }
