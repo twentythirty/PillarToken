@@ -4,9 +4,8 @@ import './TeamAllocation.sol';
 import './ERC20Interface.sol';
 import './SafeMath.sol';
 import './MigrationAgent.sol';
-import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
 
-contract PillarToken is ERC20Interface, Ownable {
+contract PillarToken is ERC20Interface {
 
     using SafeMath for uint;
     string public constant name = "PILLAR";
@@ -147,9 +146,9 @@ contract PillarToken is ERC20Interface, Ownable {
 
         /*uint256 percentOfTotal = */
         // Shouldn't this reflect all of the remaining tokens and not just the 300,000?
-        totalUsedTokens += tokensReservedForTeam;
-        balances[lockedAllocation] += tokensReservedForTeam;
-        Transfer(0, lockedAllocation, tokensReservedForTeam);
+        totalUsedTokens += totalAllocationTokens;
+        balances[lockedAllocation] += totalAllocationTokens;
+        Transfer(0, lockedAllocation, totalAllocationTokens);
     }
 
     function refund() external {
