@@ -5,7 +5,7 @@ import './SafeMath.sol';
 
 contract TeamAllocation {
   using SafeMath for uint;
-  uint256 public constant totalAllocations = 3000000;
+  uint256 public constant totalAllocationTokens = 3000000;
   PillarToken plr;
   uint256 public unlockedAt;
   mapping (address => uint256) allocations;
@@ -33,7 +33,7 @@ contract TeamAllocation {
   }
 
   function getTotalAllocation()returns(uint256){
-      return totalAllocations;
+      return totalAllocationTokens;
   }
 
   function unlock() external {
@@ -45,7 +45,7 @@ contract TeamAllocation {
 
     var allocation = allocations[msg.sender];
     allocations[msg.sender] = 0;
-    var toTransfer = tokensCreated * allocation / totalAllocations;
+    var toTransfer = tokensCreated * allocation / totalAllocationTokens;
 
     // fail if allocation is 0
     if (!plr.transfer(msg.sender, toTransfer)) throw;
