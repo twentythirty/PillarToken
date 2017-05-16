@@ -4,8 +4,9 @@ import './TeamAllocation.sol';
 import './ERC20Interface.sol';
 import './SafeMath.sol';
 import './MigrationAgent.sol';
+import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
 
-contract PillarToken is ERC20Interface {
+contract PillarToken is ERC20Interface, Ownable {
 
     using SafeMath for uint;
     string public constant name = "PILLAR";
@@ -170,6 +171,7 @@ contract PillarToken is ERC20Interface {
       Refund(msg.sender, ethValue);
     }
 
+
     function transfer(address _to, uint256 _value) returns (bool) {
         // Abort if not in Operational state.
         if (fundingMode) throw;
@@ -185,6 +187,7 @@ contract PillarToken is ERC20Interface {
         return false;
     }
 
+    //transferFrom function to make the token ERC20 complaint
     function transferFrom(address _from, address _to, uint _amount) returns (bool success) {
       if(balances[_from] >= _amount
         && allowed[_from][msg.sender] >= _amount
