@@ -5,12 +5,12 @@ import './SafeMath.sol';
 
 contract TeamAllocation {
   using SafeMath for uint;
-  uint256 public constant totalAllocationTokens = 3000000;
+  uint public constant totalAllocationTokens = 3000000;
   PillarToken plr;
-  uint256 public unlockedAt;
-  mapping (address => uint256) allocations;
+  uint public unlockedAt;
+  mapping (address => uint) allocations;
 
-  uint256 tokensCreated = 0;
+  uint tokensCreated = 0;
 
   /*
     Split among team members
@@ -22,7 +22,8 @@ contract TeamAllocation {
   function TeamAllocation(address _membershipTokenFactory) internal {
     plr = PillarToken(msg.sender);
     // Locked time of approximately 9 months before team members are able to redeeem tokens.
-    unlockedAt = now + 9 * 30 days;
+    uint nineMonths = 9 * 30 days;
+    unlockedAt = now.add(nineMonths);
 
     // This is an example for allocating to team members. Need to replace with actual addresses and check percentage for each team member.
     allocations[0x00] =  120000;
@@ -32,7 +33,7 @@ contract TeamAllocation {
     allocations[0x00] =  120000;
   }
 
-  function getTotalAllocation()returns(uint256){
+  function getTotalAllocation()returns(uint){
       return totalAllocationTokens;
   }
 
@@ -45,7 +46,7 @@ contract TeamAllocation {
 
     var allocation = allocations[msg.sender];
     allocations[msg.sender] = 0;
-    var toTransfer = tokensCreated * allocation / totalAllocationTokens;
+    var toTransfer = (tokensCreated.mul(allocation)).div(totalAllocationTokens);
 
     // fail if allocation is 0
     if (!plr.transfer(msg.sender, toTransfer)) throw;
