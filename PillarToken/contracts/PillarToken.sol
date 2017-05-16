@@ -32,14 +32,13 @@ contract PillarToken is ERC20Interface {
 
     // Minimum token creation
     uint public constant minTokensForSale = 2000000;
+
+    // Refactor this to be only one number
     //tokens reserved for team.
-    uint public constant tokensReservedForTeam = 300000;
-    //tokens reserved for 20|30 projects
-    uint public constant tokensReservedFor2030Projects = 1000000;
-    //tokens reserved for future sale
-    uint public constant tokensForFutureSale = 1700000;
+    uint public constant totalAllocationTokens = 3000000;
+
     //total tokens available for sale
-    uint public constant tokensAvailableForSale = (totalNumberOfTokens - (tokensReservedForTeam + tokensReservedFor2030Projects + tokensForFutureSale));
+    uint public constant tokensAvailableForSale = totalNumberOfTokens - totalAllocationTokens;
     //Sale Period
     uint public salePeriod;
 
@@ -242,14 +241,13 @@ contract PillarToken is ERC20Interface {
     */
 }
 
-/* Check Token.sol here https://github.com/maraoz/golem-crowdfunding/tree/master/contracts
+/*
 
 Token Name: Pillar
 Abbreviation: PLR
 No. of decimal places per token: 18
 Total number of tokens issued: 10,000,000 tokens
 Tokens on offer for ICO: 7,000,000
-
 
 
 Nominal price per Token: 1 USD (to be priced in ether ahead of the event)
