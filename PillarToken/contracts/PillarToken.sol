@@ -39,7 +39,7 @@ contract PillarToken is ERC20Interface, Ownable {
     uint public constant totalAllocationTokens = 3000000;
 
     //total tokens available for sale
-    uint public constant tokensAvailableForSale = totalNumberOfTokens - totalAllocationTokens;
+    uint public constant tokensAvailableForSale = totalNumberOfTokens.sub(totalAllocationTokens);
     //Sale Period
     uint public salePeriod;
 
@@ -62,10 +62,20 @@ contract PillarToken is ERC20Interface, Ownable {
     event Refund(address indexed _from,uint256 _value);
     event Migrate(address indexed _from, address indexed _to, uint256 _value);
 
+    modifier isFundingModeStart() {
+        if (fundingMode) throw;
+        _;
+    }
+
+    modifier isFundingModeStop() {
+        if (!fundingMode) throw;
+        _;
+    }
+
     function PillarToken(address _pillarTokenFactory, uint256 _fundingStartBlock, uint256 _fundingStopBlock, address _migrationMaster) {
 
       //sale peioriod
-      salePeriod = now + 60 hours;
+      salePeriod = now.add(60 hours);
 
       pillarTokenFactory = _pillarTokenFactory;
       migrationMaster = _migrationMaster;
@@ -77,8 +87,8 @@ contract PillarToken is ERC20Interface, Ownable {
     /*
     * Function used to validate conditions in case the contract is called with incorrect data
     */
-    function() payable external {
-      if(!fundingMode) throw;
+    function() payable isFundingModeStop external {
+//      if(!fundingMode) throw;
       if(now > salePeriod) throw;
       if(block.number < fundingStartBlock) throw;
       if(block.number > fundingStopBlock) throw;
@@ -87,12 +97,12 @@ contract PillarToken is ERC20Interface, Ownable {
       if (msg.value == 0) throw;
 
       //total tokens purchased is received gas/cost of 1 token
-      var numTokens = msg.value / tokenPrice;
-      totalUsedTokens += numTokens;
+      uint numTokens = msg.value.div(tokenPrice);
+      totalUsedTokens = totalUsedTokens.add(numTokens);
       if (totalUsedTokens > tokensAvailableForSale) throw;
 
       // Assign new tokens to sender
-      balances[msg.sender] += numTokens;
+      balances[msg.sender] = balances[msg.sender].add(numTokens);
       // log token creation event
       Transfer(0, msg.sender, numTokens);
     }
@@ -112,8 +122,8 @@ contract PillarToken is ERC20Interface, Ownable {
     }
 
     // ICO
-    function fundingActive() constant external returns (bool){
-      if(!fundingMode) return false;
+    function fundingActive() constant isFundingModeStop external returns (bool){
+//      if(!fundingMode) return false;
 
       //Shouldn't this be total tokensAvailableForSale? Earlier the check was against minTokensForSale
       if(block.number < fundingStartBlock || block.number > fundingStopBlock || totalUsedTokens > tokensAvailableForSale){
@@ -122,20 +132,22 @@ contract PillarToken is ERC20Interface, Ownable {
       return true;
     }
 
-    function numberOfTokensLeft() constant external returns (uint256) {
-      if (!fundingMode) return 0;
+    function numberOfTokensLeft() isFundingModeStop constant external returns (uint256) {
+//      if (!fundingMode) return 0;
       if (block.number > fundingStopBlock) {
         return 0;
       }
-      return (tokensAvailableForSale - totalUsedTokens);
+      return tokensAvailableForSale.sub(totalUsedTokens);
     }
 
     function isFinalized() constant external returns (bool){
       return !fundingMode;
     }
 
-    function finalize() onlyOwner external {
-      if (!fundingMode) throw;
+
+    function finalize() isFundingModeStop onlyOwner external {
+//      if (!fundingMode) throw;
+
       if ((block.number <= fundingStopBlock ||
         totalUsedTokens < minTokensForSale) &&
         totalUsedTokens < tokensAvailableForSale) throw;
@@ -147,39 +159,39 @@ contract PillarToken is ERC20Interface, Ownable {
 
         /*uint256 percentOfTotal = */
         // Shouldn't this reflect all of the remaining tokens and not just the 300,000?
-        totalUsedTokens += totalAllocationTokens;
-        balances[lockedAllocation] += totalAllocationTokens;
+        totalUsedTokens = totalUsedTokens.add(totalAllocationTokens);
+        balances[lockedAllocation] = balances[lockedAllocation].add(totalAllocationTokens);
         Transfer(0, lockedAllocation, totalAllocationTokens);
     }
 
-    function refund() external {
+    function refund() isFundingModeStop external {
 
-      if(!fundingMode) throw;
+//      if(!fundingMode) throw;
       if(block.number <= fundingStopBlock) throw;
       if(totalUsedTokens >= minTokensForSale) throw;
 
-      var ttaValue= balances[msg.sender];
-      if(ttaValue == 0) throw;
+      uint plrValue = balances[msg.sender];
+      if(plrValue == 0) throw;
 
       balances[msg.sender] = 0;
 
-      totalUsedTokens -= ttaValue;
+      totalUsedTokens = totalUsedTokens.sub(plrValue);
 
-      var ethValue = ttaValue / tokenPrice;
+      uint ethValue = plrValue.div(tokenPrice);
       if(!msg.sender.send(ethValue)) throw;
       Refund(msg.sender, ethValue);
     }
 
 
-    function transfer(address _to, uint256 _value) returns (bool) {
+    function transfer(address _to, uint256 _value) isFundingModeStart returns (bool) {
         // Abort if not in Operational state.
-        if (fundingMode) throw;
+//        if (fundingMode) throw;
 
-        var senderBalance = balances[msg.sender];
+        uint senderBalance = balances[msg.sender];
         if (senderBalance >= _value && _value > 0) {
-            senderBalance -= _value;
+            senderBalance = senderBalance.sub(_value);
             balances[msg.sender] = senderBalance;
-            balances[_to] += _value;
+            balances[_to] = balances[_to].add(_value);
             Transfer(msg.sender, _to, _value);
             return true;
         }
@@ -191,10 +203,10 @@ contract PillarToken is ERC20Interface, Ownable {
       if(balances[_from] >= _amount
         && allowed[_from][msg.sender] >= _amount
         && _amount > 0
-        && balances[_to] + _amount > balances[_to]) {
-          balances[_from] -= _amount;
-          allowed[_from][msg.sender] -= _amount;
-          balances[_to] += _amount;
+        && balances[_to].add(_amount) > balances[_to]) {
+          balances[_from] = balances[_from].sub(_amount);
+          allowed[_from][msg.sender] = allowed[_from][msg.sender].sub(_amount);
+          balances[_to] = balances[_to].add(_amount);
           Transfer(_from, _to, _amount);
           return true;
         } else {
@@ -211,16 +223,16 @@ contract PillarToken is ERC20Interface, Ownable {
     }
 
     // token migration
-    function migrate(uint256 _value) external {
-      if (fundingMode) throw;
+    function migrate(uint256 _value) isFundingModeStart external {
+//      if (fundingMode) throw;
       if (migrationAgent == 0) throw;
 
       if (_value == 0) throw;
       if (_value > balances[msg.sender]) throw;
 
-      balances[msg.sender] -= _value;
-      totalUsedTokens -= _value;
-      totalMigrated += _value;
+      balances[msg.sender] = balances[msg.sender].sub(_value);
+      totalUsedTokens = totalUsedTokens.sub(_value);
+      totalMigrated = totalMigrated.add(_value);
       MigrationAgent(migrationAgent).migrateFrom(msg.sender, _value);
 
       Migrate(msg.sender, migrationAgent, _value);
@@ -238,8 +250,8 @@ contract PillarToken is ERC20Interface, Ownable {
       balances[_to] += _tokens;
     }
 
-    function setMigrationAgent(address _agent) external{
-      if(fundingMode) throw;
+    function setMigrationAgent(address _agent) isFundingModeStart external{
+//      if(fundingMode) throw;
       if(migrationAgent != migrationAgent) throw;
       if(msg.sender != migrationMaster) throw;
       migrationAgent = _agent;

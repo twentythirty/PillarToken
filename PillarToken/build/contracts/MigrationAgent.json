@@ -1,0 +1,26 @@
+{
+  "contract_name": "MigrationAgent",
+  "abi": [
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_from",
+          "type": "address"
+        },
+        {
+          "name": "_value",
+          "type": "uint256"
+        }
+      ],
+      "name": "migrateFrom",
+      "outputs": [],
+      "payable": false,
+      "type": "function"
+    }
+  ],
+  "networks": {},
+  "schema_version": "0.0.5",
+  "updated_at": 1494999376509,
+  "unlinked_binary": "0x"
+}
