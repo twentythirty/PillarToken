@@ -2,10 +2,11 @@ pragma solidity ^0.4.8;
 
 import './TeamAllocation.sol';
 import './ERC20Interface.sol';
-import './SafeMath.sol';
 import './MigrationAgent.sol';
+import './Ownable.sol';
+import './SafeMath.sol';
 
-contract PillarToken is ERC20Interface {
+contract PillarToken is ERC20Interface, Ownable {
 
     using SafeMath for uint;
     string public constant name = "PILLAR";
@@ -133,7 +134,7 @@ contract PillarToken is ERC20Interface {
       return !fundingMode;
     }
 
-    function finalize() external {
+    function finalize() onlyOwner external {
       if (!fundingMode) throw;
       if ((block.number <= fundingStopBlock ||
         totalUsedTokens < minTokensForSale) &&
@@ -225,6 +226,18 @@ contract PillarToken is ERC20Interface {
       Migrate(msg.sender, migrationAgent, _value);
     }
 
+    function allocateTokens(address _to,uint _tokens) onlyOwner external {
+      if (!fundingMode) throw;
+
+      if ((block.number <= fundingStopBlock ||
+        totalUsedTokens < minTokensForSale) &&
+        totalUsedTokens < tokensAvailableForSale &&
+        (totalUsedTokens - _tokens) < 0) throw;
+
+      totalUsedTokens -= _tokens;
+      balances[_to] += _tokens;
+    }
+
     function setMigrationAgent(address _agent) external{
       if(fundingMode) throw;
       if(migrationAgent != migrationAgent) throw;
@@ -275,3 +288,4 @@ Token sale & ICO have been used interchangeably.
 
 
 */
+
