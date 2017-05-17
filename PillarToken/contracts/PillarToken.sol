@@ -222,6 +222,9 @@ contract PillarToken is ERC20Interface, Ownable {
       return true;
     }
 
+    function allowance(address _owner, address _spender) constant returns (uint remaining) {
+      return allowed[_owner][_spender];
+    }
     // token migration
     function migrate(uint256 _value) isFundingModeStart external {
 //      if (fundingMode) throw;
@@ -300,4 +303,3 @@ Token sale & ICO have been used interchangeably.
 
 
 */
-
