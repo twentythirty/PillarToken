@@ -14,10 +14,6 @@ contract PillarToken is ERC20Interface, Ownable {
     //uint8 costs more gas than uint246/uint so changed the data type
     uint public constant decimals = 18;
 
-    address public migrationAgent;
-    address public migrationMaster;
-    uint public totalMigrated;
-
     TeamAllocation tAll;
     TeamAllocation public lockedAllocation;
 
@@ -72,13 +68,11 @@ contract PillarToken is ERC20Interface, Ownable {
         _;
     }
 
-    function PillarToken(address _pillarTokenFactory, uint256 _fundingStartBlock, uint256 _fundingStopBlock, address _migrationMaster) {
+    function PillarToken(address _pillarTokenFactory, uint256 _fundingStartBlock, uint256 _fundingStopBlock) {
 
       //sale peioriod
       salePeriod = now.add(60 hours);
-
       pillarTokenFactory = _pillarTokenFactory;
-      migrationMaster = _migrationMaster;
       fundingStartBlock = _fundingStartBlock;
       fundingStopBlock = _fundingStopBlock;
       totalUsedTokens = 0;
@@ -105,6 +99,25 @@ contract PillarToken is ERC20Interface, Ownable {
       balances[msg.sender] = balances[msg.sender].add(numTokens);
       // log token creation event
       Transfer(0, msg.sender, numTokens);
+    }
+
+    function purchase() payable isFundingModeStop external {
+      if(now > salePeriod) throw;
+      if(block.number < fundingStartBlock) throw;
+      if(block.number > fundingStopBlock) throw;
+      if(totalUsedTokens >= tokensAvailableForSale) throw;
+
+      if (msg.value == 0) throw;
+
+      //total tokens purchased is received gas/cost of 1 token
+      uint numTokens = msg.value.div(tokenPrice);
+      totalUsedTokens = totalUsedTokens.add(numTokens);
+      if (totalUsedTokens > tokensAvailableForSale) throw;
+
+      // Assign new tokens to sender
+      balances[msg.sender] = balances[msg.sender].add(numTokens);
+      // log token creation event
+      Transfer(0, msg.sender, numTokens);      
     }
 
     function checkSalePeriod() external constant returns (uint) {
@@ -225,21 +238,6 @@ contract PillarToken is ERC20Interface, Ownable {
     function allowance(address _owner, address _spender) constant returns (uint remaining) {
       return allowed[_owner][_spender];
     }
-    // token migration
-    function migrate(uint256 _value) isFundingModeStart external {
-//      if (fundingMode) throw;
-      if (migrationAgent == 0) throw;
-
-      if (_value == 0) throw;
-      if (_value > balances[msg.sender]) throw;
-
-      balances[msg.sender] = balances[msg.sender].sub(_value);
-      totalUsedTokens = totalUsedTokens.sub(_value);
-      totalMigrated = totalMigrated.add(_value);
-      MigrationAgent(migrationAgent).migrateFrom(msg.sender, _value);
-
-      Migrate(msg.sender, migrationAgent, _value);
-    }
 
     function allocateTokens(address _to,uint _tokens) onlyOwner external {
       if (!fundingMode) throw;
@@ -251,18 +249,6 @@ contract PillarToken is ERC20Interface, Ownable {
 
       totalUsedTokens -= _tokens;
       balances[_to] += _tokens;
-    }
-
-    function setMigrationAgent(address _agent) isFundingModeStart external{
-//      if(fundingMode) throw;
-      if(migrationAgent != migrationAgent) throw;
-      if(msg.sender != migrationMaster) throw;
-      migrationAgent = _agent;
-    }
-
-    function setMigrationMaster(address _master) external {
-      if(msg.sender != migrationMaster) throw;
-      migrationMaster = _master;
     }
 
     /* As per the discussion with David in todays ICO call, there is a requirement for two new methods
@@ -303,3 +289,4 @@ Token sale & ICO have been used interchangeably.
 
 
 */
+
