@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pillar ICO subscription</title>
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+  <script src="./app.js"></script>
+</head>
+<body>
+  <h3> PillarToken ICO Subscription stats</h3>
+  <table>
+    <tr>
+      <th>Total Tokens</th><td><span id="total"></span></td>
+      <th>Available Tokens</th><td><span id="available"></span></td>
+      <th>Sale Open?</th><td><span id="sale"></span></td>
+    </tr>
+  </table>
+  <table>
+    <tr>
+      <th>Account 1</th>
+      <th>Account 2</th>
+      <th>Account 3</th>
+      <th>Account 4</th>
+      <th>Account 5</th>
+    </tr>
+    <tr>
+      <td>Tokens: <span id="account1_tokens"></span></td>
+      <td>Tokens: <span id="account2_tokens"></span></td>
+      <td>Tokens: <span id="account3_tokens"></span></td>
+      <td>Tokens: <span id="account4_tokens"></span></td>
+      <td>Tokens: <span id="account5_tokens"></span></td>
+    </tr>
+    <tr>
+      <td><input type="text" placeholder="Amount" id="amount1"/> <button onclick="App.purchaseTokenFor(1);">Purchase</button></td>
+      <td><input type="text" placeholder="Amount" id="amount2"/> <button onclick="App.purchaseTokenFor(2);">Purchase</button></td>
+      <td><input type="text" placeholder="Amount" id="amount3"/> <button onclick="App.purchaseTokenFor(3);">Purchase</button></td>
+      <td><input type="text" placeholder="Amount" id="amount4"/> <button onclick="App.purchaseTokenFor(4);">Purchase</button></td>
+      <td><input type="text" placeholder="Amount" id="amount5"/> <button onclick="App.purchaseTokenFor(5);">Purchase</button></td>
+    </tr>
+  </table>
+  <span id="status"></span>
+  <br>
+  <span class="hint"><strong>Hint:</strong> open the browser developer console to view any errors and warnings.</span>
+</body>
+</html>
