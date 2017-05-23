@@ -117,7 +117,7 @@ contract PillarToken is ERC20Interface, Ownable {
       // Assign new tokens to sender
       balances[msg.sender] = balances[msg.sender].add(numTokens);
       // log token creation event
-      Transfer(0, msg.sender, numTokens);      
+      Transfer(0, msg.sender, numTokens);
     }
 
     function checkSalePeriod() external constant returns (uint) {
@@ -214,11 +214,11 @@ contract PillarToken is ERC20Interface, Ownable {
     //transferFrom function to make the token ERC20 complaint
     function transferFrom(address _from, address _to, uint _amount) returns (bool success) {
       if(balances[_from] >= _amount
-        && allowed[_from][msg.sender] >= _amount
+        && allowed[_from][_to] >= _amount
         && _amount > 0
         && balances[_to].add(_amount) > balances[_to]) {
           balances[_from] = balances[_from].sub(_amount);
-          allowed[_from][msg.sender] = allowed[_from][msg.sender].sub(_amount);
+          allowed[_from][_to] = allowed[_from][_to].sub(_amount);
           balances[_to] = balances[_to].add(_amount);
           Transfer(_from, _to, _amount);
           return true;
@@ -289,4 +289,3 @@ Token sale & ICO have been used interchangeably.
 
 
 */
-
