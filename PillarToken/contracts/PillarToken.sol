@@ -2,7 +2,6 @@ pragma solidity ^0.4.8;
 
 import './TeamAllocation.sol';
 import './ERC20Interface.sol';
-import './MigrationAgent.sol';
 import './Ownable.sol';
 import './SafeMath.sol';
 
@@ -35,7 +34,8 @@ contract PillarToken is ERC20Interface, Ownable {
     uint public constant totalAllocationTokens = 3000000;
 
     //total tokens available for sale
-    uint public constant tokensAvailableForSale = totalNumberOfTokens.sub(totalAllocationTokens);
+    uint public tokensAvailableForSale;
+
     //Sale Period
     uint public salePeriod;
 
@@ -76,6 +76,7 @@ contract PillarToken is ERC20Interface, Ownable {
       fundingStartBlock = _fundingStartBlock;
       fundingStopBlock = _fundingStopBlock;
       totalUsedTokens = 0;
+      tokensAvailableForSale = totalNumberOfTokens.sub(totalAllocationTokens);
     }
 
     /**
@@ -89,7 +90,6 @@ contract PillarToken is ERC20Interface, Ownable {
     * Function used to validate conditions in case the contract is called with incorrect data
     */
     function() payable isFundingModeStop external {
-//      if(!fundingMode) throw;
       if(now > salePeriod) throw;
       if(block.number < fundingStartBlock) throw;
       if(block.number > fundingStopBlock) throw;
@@ -97,7 +97,7 @@ contract PillarToken is ERC20Interface, Ownable {
 
       if (msg.value == 0) throw;
 
-      //total tokens purchased is received gas/cost of 1 token
+      // total tokens purchased is received gas/cost of 1 token
       uint numTokens = msg.value.div(tokenPrice);
       totalUsedTokens = totalUsedTokens.add(numTokens);
       if (totalUsedTokens > tokensAvailableForSale) throw;
@@ -116,7 +116,7 @@ contract PillarToken is ERC20Interface, Ownable {
 
       if (msg.value == 0) throw;
 
-      //total tokens purchased is received gas/cost of 1 token
+      // total tokens purchased is received gas/cost of 1 token
       uint numTokens = msg.value.div(tokenPrice);
       totalUsedTokens = totalUsedTokens.add(numTokens);
       if (totalUsedTokens > tokensAvailableForSale) throw;
@@ -132,20 +132,19 @@ contract PillarToken is ERC20Interface, Ownable {
     }
 
     function totalSupply() constant returns (uint totalSupply) {
-      //return totalTokens;
+      // return totalTokens;
       totalSupply = tokensAvailableForSale;
     }
 
     function balanceOf(address owner) constant returns (uint balance) {
-      //return balances[owner];
+      // return balances[owner];
       balance = balances[owner];
     }
 
     // ICO
     function fundingActive() constant isFundingModeStop external returns (bool){
-//      if(!fundingMode) return false;
 
-      //Shouldn't this be total tokensAvailableForSale? Earlier the check was against minTokensForSale
+      // Shouldn't this be total tokensAvailableForSale? Earlier the check was against minTokensForSale
       if(block.number < fundingStartBlock || block.number > fundingStopBlock || totalUsedTokens > tokensAvailableForSale){
         return false;
       }
@@ -153,7 +152,6 @@ contract PillarToken is ERC20Interface, Ownable {
     }
 
     function numberOfTokensLeft() isFundingModeStop constant external returns (uint256) {
-//      if (!fundingMode) return 0;
       if (block.number > fundingStopBlock) {
         return 0;
       }
@@ -166,8 +164,6 @@ contract PillarToken is ERC20Interface, Ownable {
 
 
     function finalize() isFundingModeStop onlyOwner external {
-//      if (!fundingMode) throw;
-
       if ((block.number <= fundingStopBlock ||
         totalUsedTokens < minTokensForSale) &&
         totalUsedTokens < tokensAvailableForSale) throw;
@@ -185,8 +181,6 @@ contract PillarToken is ERC20Interface, Ownable {
     }
 
     function refund() isFundingModeStop external {
-
-//      if(!fundingMode) throw;
       if(block.number <= fundingStopBlock) throw;
       if(totalUsedTokens >= minTokensForSale) throw;
 
@@ -205,8 +199,6 @@ contract PillarToken is ERC20Interface, Ownable {
 
     function transfer(address _to, uint256 _value) isFundingModeStart returns (bool) {
         // Abort if not in Operational state.
-//        if (fundingMode) throw;
-
         uint senderBalance = balances[msg.sender];
         if (senderBalance >= _value && _value > 0) {
             senderBalance = senderBalance.sub(_value);
@@ -218,7 +210,7 @@ contract PillarToken is ERC20Interface, Ownable {
         return false;
     }
 
-    //transferFrom function to make the token ERC20 complaint
+    // transferFrom function to make the token ERC20 complaint
     function transferFrom(address _from, address _to, uint _amount) returns (bool success) {
       if(balances[_from] >= _amount
         && allowed[_from][_to] >= _amount
