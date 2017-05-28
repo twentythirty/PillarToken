@@ -82,7 +82,7 @@ contract PillarToken is ERC20Interface, Ownable {
     /**
     * Function to pause the ICO. Will be used for fire fighting
     */
-    function pause() onlyOwner,isFundingModeStop external returns (bool) {
+    function pause() onlyOwner isFundingModeStop external returns (bool) {
       fundingMode = false;
     }
 
