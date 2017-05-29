@@ -20,16 +20,14 @@ contract TeamAllocation {
   */
 
   function TeamAllocation(address _membershipTokenFactory) internal {
-    plr = PillarToken(msg.sender);
+  //function TeamAllocation() internal {
+    //plr = PillarToken(msg.sender);
+    plr = PillarToken(_membershipTokenFactory);
     // Locked time of approximately 9 months before team members are able to redeeem tokens.
     uint nineMonths = 9 * 30 days;
     unlockedAt = now.add(nineMonths);
 
     // This is an example for allocating to team members. Need to replace with actual addresses and check percentage for each team member.
-    allocations[0x00] =  120000;
-    allocations[0x00] =  120000;
-    allocations[0x00] =  120000;
-    allocations[0x00] =  120000;
     allocations[0x00] =  120000;
   }
 

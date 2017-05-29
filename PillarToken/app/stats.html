@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pillar ICO Stats</title>
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+  <script src="./app.js"></script>
+</head>
+<body>
+  <h3> PillarToken ICO Subscription stats</h3>
+  <table>
+    <tr>
+      <th>Total Tokens</th><td><span id="total"></span></td>
+      <th>Available Tokens</th><td><span id="available"></span></td>
+      <th>Sale Open?</th><td><span id="sale"></span></td>
+    </tr>
+  </table>
+  <span id="status"></span>
+  <br>
+  <span class="hint"><strong>Hint:</strong> open the browser developer console to view any errors and warnings.</span>
+  <script type="text/javascript">
+    setTimeOut(App.tokenStats(),2000);
+  </script>
+</body>
+</html>

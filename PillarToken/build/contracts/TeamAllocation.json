@@ -1,0 +1,72 @@
+{
+  "contract_name": "TeamAllocation",
+  "abi": [
+    {
+      "constant": false,
+      "inputs": [],
+      "name": "getTotalAllocation",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "totalAllocationTokens",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "unlockedAt",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [],
+      "name": "unlock",
+      "outputs": [],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "name": "_membershipTokenFactory",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "type": "constructor"
+    }
+  ],
+  "unlinked_binary": "0x",
+  "networks": {
+    "1496037340277": {
+      "links": {},
+      "events": {},
+      "updated_at": 1496040154643
+    }
+  },
+  "schema_version": "0.0.5",
+  "updated_at": 1496040154643
+}

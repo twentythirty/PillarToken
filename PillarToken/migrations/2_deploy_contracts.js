@@ -5,11 +5,7 @@ var TeamAllocation = artifacts.require("./TeamAllocation.sol");
 var PillarToken = artifacts.require("./PillarToken.sol");
 
 module.exports = function(deployer) {
-  //deployer.deploy(SafeMath);
-  //deployer.deploy(MigrationAgent);
-  //deployer.deploy(ERC20Interface);
-  deployer.deploy(TeamAllocation);
-  //deployer.link(SafeMath, PillarToken);
-  //deployer.deploy(PillarToken);
-  deployer.deploy(PillarToken,"0x0041Ef310c03a36aA329B3d4f8f04AF8DC06B468",1741595,1841595);
+  //deployer.deploy(TeamAllocation);
+  deployer.deploy(PillarToken,"0x00e4A3C02834F7d443011Fd0546566EF9814982b",1741595,1841595);
+  //deployer.deploy(PillarToken,"0x8109f12890b9f05e9dd620af8c5f442fa8a4ca10",0,1000000);
 };
