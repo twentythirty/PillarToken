@@ -61,6 +61,11 @@
   ],
   "unlinked_binary": "0x",
   "networks": {
+    "42": {
+      "links": {},
+      "events": {},
+      "updated_at": 1496040688677
+    },
     "1496037340277": {
       "links": {},
       "events": {},
@@ -68,5 +73,5 @@
     }
   },
   "schema_version": "0.0.5",
-  "updated_at": 1496040154643
+  "updated_at": 1496040688677
 }

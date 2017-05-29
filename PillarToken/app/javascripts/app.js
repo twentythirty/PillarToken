@@ -131,6 +131,32 @@ window.App = {
   setStatus: function(message) {
     var status = document.getElementById("status");
     status.innerHTML = message;
+  },
+
+  purchaseToken: function() {
+    var amount = document.getElementById("amount");
+    var meta = PillarToken.at("0xd908885691fb0af3742fac847e9733f0c9901f7d");
+    //PillarToken.deployed().then(function(instance) {
+    //  meta = instance;
+    self.setStatus("Purchasing Token for account: " + accounts[0] + " using amount: " + amount);
+    return meta.purchase({from: accounts[0], value: web3.toWei(amount,'ether')}).then(function(result) {
+      return meta.balanceOf.call(accounts[0]);
+    }).then(function(balance) {
+      self.setStatus("Purchased "+balance.valueOf() + " using "+amount+"ether");
+    }).catch(function(e) {
+      console.log(e);
+      self.setStatus("Error in purchaseToken, see log");
+    });
+  },
+
+  viewBalance: function() {
+    var meta = PillarToken.at("0xd908885691fb0af3742fac847e9733f0c9901f7d");
+    return meta.balanceOf.call(accounts[0]).then(function(result){
+      self.setStatus("Total tokens under " + accounts[0] + " is :" + result.valueOf());
+    }).catch(function(e) {
+      console.log(e);
+      self.setStatus("Error fetching balance");
+    });
   }
 };
 

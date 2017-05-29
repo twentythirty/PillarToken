@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pillar ICO Stats</title>
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+  <script src="./app.js"></script>
+</head>
+<body>
+  <h3> PillarToken ICO Purchase</h3>
+  <table>
+    <tr>
+      <th>Total Ether</th><td><input type="text" id="amount"/></td>
+    </tr>
+    <tr>
+      <td><button id="purchase" onclick="App.purchaseToken();">Purchase</button></td>
+      <td><button id="view" onclick="App.viewBalance();">View Balance</button></td>
+    </tr>
+  </table>
+  <span id="status"></span>
+  <br>
+  <span class="hint"><strong>Hint:</strong> open the browser developer console to view any errors and warnings.</span>
+</body>
+</html>
