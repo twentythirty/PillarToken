@@ -151,7 +151,7 @@ contract PillarToken is ERC20Interface, Ownable {
       return true;
     }
 
-    function numberOfTokensLeft() isFundingModeStop constant external returns (uint256) {
+    function numberOfTokensLeft() constant external returns (uint256) {
       if (block.number > fundingStopBlock) {
         return 0;
       }
@@ -180,7 +180,7 @@ contract PillarToken is ERC20Interface, Ownable {
         Transfer(0, lockedAllocation, totalAllocationTokens);
     }
 
-    function refund() isFundingModeStop external {
+    function refund() isFundingModeStop onlyOwner external {
       if(block.number <= fundingStopBlock) throw;
       if(totalUsedTokens >= minTokensForSale) throw;
 
@@ -197,13 +197,22 @@ contract PillarToken is ERC20Interface, Ownable {
     }
 
 
-    function transfer(address _to, uint256 _value) isFundingModeStart returns (bool) {
+    function transfer(address _to, uint256 _value) external isFundingModeStart returns (bool) {
         // Abort if not in Operational state.
+        if(_to == address(0)) throw;
+
         uint senderBalance = balances[msg.sender];
         if (senderBalance >= _value && _value > 0) {
+          
             senderBalance = senderBalance.sub(_value);
             balances[msg.sender] = senderBalance;
-            balances[_to] = balances[_to].add(_value);
+
+            if(balances[_to] > 0) {
+              balances[_to] = balances[_to].add(_value);
+            } else {
+              balances[_to] = _value;
+            }
+
             Transfer(msg.sender, _to, _value);
             return true;
         }
