@@ -197,13 +197,13 @@ contract PillarToken is ERC20Interface, Ownable {
     }
 
 
-    function transfer(address _to, uint256 _value) external isFundingModeStart returns (bool) {
+    function transfer(address _to, uint256 _value) external payable returns (bool) {
         // Abort if not in Operational state.
         if(_to == address(0)) throw;
 
         uint senderBalance = balances[msg.sender];
         if (senderBalance >= _value && _value > 0) {
-          
+
             senderBalance = senderBalance.sub(_value);
             balances[msg.sender] = senderBalance;
 

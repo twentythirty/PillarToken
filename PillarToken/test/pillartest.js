@@ -46,10 +46,9 @@ contract('PillarToken', function(accounts) {
     const balance3 = await pillar.balanceOf.call(accounts[2]);
     expect(parseInt(balance3.valueOf())).to.equal(expected3);
   });
-  /* transfer call is failing needs investigation
+  /* transfer call is failing needs investigation */
   it("test for transfer", async function() {
-    const status = await pillar.transfer.call(accounts[2],100,{from:accounts[0]});//{from: accounts[0], gas: 1000000});
-    expect(status.valueOf()).to.equal(true);
+    await pillar.transfer(accounts[2],100,{from:accounts[0], gas: 100000});//{from: accounts[0], gas: 1000000});
     var expected1 = 100;
     const balance1 = await pillar.balanceOf.call(accounts[2]);
     expect(parseInt(balance1)).to.equal(expected1);
@@ -57,7 +56,7 @@ contract('PillarToken', function(accounts) {
     const balance2 = await pillar.balanceOf.call(accounts[0]);
     expect(parseInt(balance2)).to.equal(expected2);
   });
-*/
+
   it("test for refund failure", async function() {
     try {
       await pillar.refund.call();
