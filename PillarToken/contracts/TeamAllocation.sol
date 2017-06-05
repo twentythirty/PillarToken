@@ -3,9 +3,10 @@ pragma solidity ^0.4.8;
 import './PillarToken.sol';
 import './SafeMath.sol';
 
-contract TeamAllocation {
+contract TeamAllocation is Ownable {
   using SafeMath for uint;
   uint public constant totalAllocationTokens = 3000000;
+  uint public remainingAllocationTokens = 3000000;
   PillarToken plr;
   uint public unlockedAt;
   mapping (address => uint) allocations;
@@ -28,7 +29,16 @@ contract TeamAllocation {
     unlockedAt = now.add(nineMonths);
 
     // This is an example for allocating to team members. Need to replace with actual addresses and check percentage for each team member.
-    allocations[0x00] =  120000;
+    //    allocations[0x00] =  120000;
+  }
+
+  function assignTokensToTeamMember(address _teamMemberAddress,uint _tokens) onlyOwner returns(bool){
+    if(remainingAllocationTokens >= _tokens){
+      remainingAllocationTokens = remainingAllocationTokens - _tokens;
+      allocations[_teamMemberAddress] =  _tokens;
+      return true;
+    }
+    return false;
   }
 
   function getTotalAllocation()returns(uint){
