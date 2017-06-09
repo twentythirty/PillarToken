@@ -27,6 +27,7 @@ contract TeamAllocation is Ownable {
     // Locked time of approximately 9 months before team members are able to redeeem tokens.
     uint nineMonths = 9 * 30 days;
     unlockedAt = now.add(nineMonths);
+    //member allocations hardcoded
   }
 /*
   function assignTokensToTeamMember(address _teamMemberAddress,uint _tokens) onlyOwner returns(bool){
