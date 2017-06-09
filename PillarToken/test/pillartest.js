@@ -65,9 +65,9 @@ contract('PillarToken', function(accounts) {
       expect(e).not.to.equal('');
     }
   });
-/*
-  it("test for finalize", async function() {
 
+  it("test for finalize", async function() {
+    await pillar.finalize.call();
   });
-  */
+
 });

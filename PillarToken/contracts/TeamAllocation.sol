@@ -1,15 +1,17 @@
 pragma solidity ^0.4.8;
 
-import './PillarToken.sol';
 import './SafeMath.sol';
+import './Ownable.sol';
+import './PillarToken.sol';
 
 contract TeamAllocation is Ownable {
   using SafeMath for uint;
+  PillarToken plr;
   uint public constant totalAllocationTokens = 3000000;
   uint public remainingAllocationTokens = 3000000;
-  PillarToken plr;
   uint public unlockedAt;
   mapping (address => uint) allocations;
+  address[] members;
 
   uint tokensCreated = 0;
 
@@ -20,22 +22,18 @@ contract TeamAllocation is Ownable {
     Tokens reserved for future sale: 1,000,000
   */
 
-  function TeamAllocation(address _membershipTokenFactory) internal {
-  //function TeamAllocation() internal {
-    //plr = PillarToken(msg.sender);
-    plr = PillarToken(_membershipTokenFactory);
+  function TeamAllocation() {
+    plr = PillarToken(msg.sender);
     // Locked time of approximately 9 months before team members are able to redeeem tokens.
     uint nineMonths = 9 * 30 days;
     unlockedAt = now.add(nineMonths);
-
-    // This is an example for allocating to team members. Need to replace with actual addresses and check percentage for each team member.
-    //    allocations[0x00] =  120000;
   }
 
   function assignTokensToTeamMember(address _teamMemberAddress,uint _tokens) onlyOwner returns(bool){
     if(remainingAllocationTokens >= _tokens){
       remainingAllocationTokens = remainingAllocationTokens - _tokens;
       allocations[_teamMemberAddress] =  _tokens;
+      members.push(_teamMemberAddress);
       return true;
     }
     return false;
@@ -45,7 +43,7 @@ contract TeamAllocation is Ownable {
       return totalAllocationTokens;
   }
 
-  function unlock() external {
+  function unlock() external payable returns (bool) {
     if (now < unlockedAt) throw;
 
     if (tokensCreated == 0) {

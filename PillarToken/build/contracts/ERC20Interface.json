@@ -99,7 +99,7 @@
           "type": "bool"
         }
       ],
-      "payable": false,
+      "payable": true,
       "type": "function"
     },
     {
@@ -171,6 +171,6 @@
   ],
   "networks": {},
   "schema_version": "0.0.5",
-  "updated_at": 1496039685994,
+  "updated_at": 1497000596736,
   "unlinked_binary": "0x"
 }
