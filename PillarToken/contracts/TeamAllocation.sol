@@ -28,7 +28,7 @@ contract TeamAllocation is Ownable {
     uint nineMonths = 9 * 30 days;
     unlockedAt = now.add(nineMonths);
   }
-
+/*
   function assignTokensToTeamMember(address _teamMemberAddress,uint _tokens) onlyOwner returns(bool){
     if(remainingAllocationTokens >= _tokens){
       remainingAllocationTokens = remainingAllocationTokens - _tokens;
@@ -38,12 +38,12 @@ contract TeamAllocation is Ownable {
     }
     return false;
   }
-
+*/
   function getTotalAllocation()returns(uint){
       return totalAllocationTokens;
   }
 
-  function unlock() external payable returns (bool) {
+  function unlock() external payable {
     if (now < unlockedAt) throw;
 
     if (tokensCreated == 0) {
