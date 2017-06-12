@@ -1,7 +1,7 @@
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.11;
 
-import './SafeMath.sol';
-import './Ownable.sol';
+import './zeppelin/SafeMath.sol';
+import './zeppelin/ownership/Ownable.sol';
 import './PillarToken.sol';
 
 contract TeamAllocation is Ownable {
@@ -54,8 +54,6 @@ contract TeamAllocation is Ownable {
     var allocation = allocations[msg.sender];
     allocations[msg.sender] = 0;
     var toTransfer = (tokensCreated.mul(allocation)).div(totalAllocationTokens);
-
-    // fail if allocation is 0
-    if (!plr.transfer(msg.sender, toTransfer)) throw;
+    plr.transfer(msg.sender, toTransfer);
   }
 }
