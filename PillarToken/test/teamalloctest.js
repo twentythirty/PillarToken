@@ -7,6 +7,6 @@ contract('TeamAllocation', function(accounts) {
   it("test for totalSupply", async function() {
     pillar = await PillarToken.deployed();
     team = await new TeamAllocation(pillar.address);
-    console.log(team);
+    //console.log(team);
   });
 });
