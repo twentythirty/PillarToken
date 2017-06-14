@@ -1,6 +1,6 @@
 # Pillar Contracts
 
-Description:
+## Description:
 
 The pillar ICO is made of three contracts
 
@@ -8,7 +8,7 @@ The pillar ICO is made of three contracts
 2) PillarToken
 3) TeamAllocation
 
-Dependencies
+## Dependencies
 
 We use Truffle in order to compile and test the contracts.
 
@@ -18,7 +18,7 @@ For more information visit https://truffle.readthedocs.io/en/latest/
 
 Also running node with active json-rpc is required. For testing puproses we suggest using https://github.com/ethereumjs/testrpc
 
-Usage
+## Usage
 
 ./run_testrpc.sh - run testrpc node with required params
 
