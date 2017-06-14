@@ -2,11 +2,13 @@
 
 ## Description:
 
-The pillar ICO is made of three contracts
+The pillar ICO is made of three contracts which are ERC20 compliant token built using OpenZeppelin library.
+The naming convention used describs the purpose of the individual contracts.
 
-1) PillarPreSale
-2) PillarToken
-3) TeamAllocation
+
+1) PillarPreSale - in development
+2) PillarToken - deployed in kovan test net
+3) TeamAllocation - in development
 
 ## Dependencies
 
@@ -26,3 +28,21 @@ truffle compile - compile all contracts
 
 truffle test - run tests
 
+## Specification 
+### PillarToken
+  Extends Zeppelin Ownable class
+
+#### Methods
+##### pause() 
+ > unction pause() onlyOwner external returns (bool) 
+
+#####  isFundable
+ > function () external isFundable payable 
+  
+#####  finalize
+ > finalize() external onlyOwner
+
+#####  balanceOf
+ > balanceOf(address owner) returns (uint)
+
+#### Events
