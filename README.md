@@ -10,6 +10,7 @@ The code has three contracts
 3) TeamAllocation
 
 PillarPreSale
+
 Variables
  totalSupply = 1,600,000 pillar tokens for the presale
 
@@ -19,6 +20,7 @@ Functions
  
  
 PillarToken
+
 Variables
 
 Functions
