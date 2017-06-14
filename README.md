@@ -30,20 +30,28 @@ truffle test - run tests
 
 ## Specification 
 ### PillarToken
-  Extends Zeppelin Ownable class.   
+  Extends Zeppelin Ownable and StandardToken classes.   
   This class will handle the ICO transaction.
 
-#### Methods
-##### pause() 
- > unction pause() onlyOwner external returns (bool) 
+#### Methods 
+##### pause() - emergency stop of ICO
+ > function pause() onlyOwner external returns (bool) 
 
-#####  isFundable
- > function () external isFundable payable 
-  
-#####  finalize
+#####  payable - validator function
+ > function() payable isFundingModeStop external 
+ 
+ ##### purchase - carry out purchase transaction
+ > function purchase() payable isFundingModeStop external
+ 
+#####  finalize - end the ICO gracefully
  > finalize() external onlyOwner
 
-#####  balanceOf
- > balanceOf(address owner) returns (uint)
+#####  refund - 
+ > function refund() isFundingModeStop external
 
 #### Events
+##### Refund
+> event Refund(address indexed _from,uint256 _value);
+    
+##### Migrate    
+> event Migrate(address indexed _from, address indexed _to, uint256 _value);
