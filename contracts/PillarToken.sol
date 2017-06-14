@@ -151,7 +151,7 @@ contract PillarToken is StandardToken, Ownable {
         Transfer(0, lockedAllocation, totalAllocationTokens);
     }
 
-    function refund() isFundingModeStop onlyOwner external {
+    function refund() isFundingModeStop external {
       if(block.number <= fundingStopBlock) throw;
       if(totalUsedTokens >= minTokensForSale) throw;
 
