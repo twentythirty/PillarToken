@@ -1,26 +1,28 @@
-# PillarToken
-The smart contract code that will be used for the Pillar ICO
+# Pillar Contracts
 
-The PillarToken project uses OpenZepellin library.
+Description:
 
-The code has three contracts
+The pillar ICO is made of three contracts
 
 1) PillarPreSale
 2) PillarToken
 3) TeamAllocation
 
-PillarPreSale
+Dependencies
 
-Variables
- totalSupply = 1,600,000 pillar tokens for the presale
+We use Truffle in order to compile and test the contracts.
 
-Functions
- pause() Function to pause the ICO. Will be used for fire fighting
- finalize() To end the campaign
- 
- 
-PillarToken
+It can be installed: npm install -g truffle
 
-Variables
+For more information visit https://truffle.readthedocs.io/en/latest/
 
-Functions
+Also running node with active json-rpc is required. For testing puproses we suggest using https://github.com/ethereumjs/testrpc
+
+Usage
+
+./run_testrpc.sh - run testrpc node with required params
+
+truffle compile - compile all contracts
+
+truffle test - run tests
+
