@@ -2,6 +2,8 @@ pragma solidity ^0.4.11;
 
 import './zeppelin/SafeMath.sol';
 import './zeppelin/ownership/Ownable.sol';
+import './PillarToken.sol';
+import './PresaleIcedWallet.sol';
 
 contract PillarPresale is Ownable {
   using SafeMath for uint;
@@ -20,6 +22,9 @@ contract PillarPresale is Ownable {
   bool fundingMode = true;
 
   uint constant PRESALE_PRICE = 2857142857000 wei;
+
+  PillarToken public plr;
+  PresaleIcedWallet public plWallet;
 
   modifier isFundable() {
       if (!fundingMode) throw;
@@ -61,15 +66,33 @@ contract PillarPresale is Ownable {
   function finalize() external onlyOwner {
     if(!fundingMode) throw;
 
-    if((block.number <= startBlock || block.number >= endBlock) && (totalUsedTokens < totalSupply)) throw;
+    if((block.number <= startBlock || block.number >= endBlock)) throw;
+
+    if(address(plWallet) == address(0)) throw;
+
+    if(address(plr) == address(0)) throw;
 
     //migrate the ether to the pillarTokenFactory wallet
     if(!pillarTokenFactory.send(this.balance)) throw;
 
-    //should we also update the balances in PillarToken accordingly?
+    //move the unsold tokens to a multisig wallet
+    uint remain = totalSupply.sub(totalUsedTokens);
+    if(remain > 0) {
+      plr.allocateTokens(address(plWallet),remain);
+    }
+
+    /*
+    for(uint i = 0;i<purchasers.length;i++) {
+      plr.assignTokens(purchasers[i],balances[purchasers[i]]);
+    }
+    */
   }
 
   function balanceOf(address owner) returns (uint) {
     return balances[owner];
+  }
+
+  function getPurchasers() external returns (address[]) {
+    return purchasers;
   }
 }

@@ -1,6 +1,7 @@
 pragma solidity ^0.4.11;
 
 import './TeamAllocation.sol';
+import './PillarFutureSaleWallet.sol';
 import './zeppelin/SafeMath.sol';
 import './zeppelin/token/StandardToken.sol';
 import './zeppelin/ownership/Ownable.sol';
@@ -13,8 +14,8 @@ contract PillarToken is StandardToken, Ownable {
     //uint8 costs more gas than uint246/uint so changed the data type
     uint public constant decimals = 18;
 
-    TeamAllocation tAll;
     TeamAllocation public lockedAllocation;
+    PillarFutureSaleWallet public futureSale;
 
     uint constant public minTokensForSale = 3000000;
     uint constant public totalAllocationTokens = 24000000;
@@ -176,7 +177,7 @@ contract PillarToken is StandardToken, Ownable {
         totalUsedTokens < totalSupply &&
         (totalUsedTokens - _tokens) < 0) throw;
 
-      totalUsedTokens -= _tokens;
+      totalUsedTokens = totalUsedTokens.sub(_tokens);
       balances[_to] += _tokens;
     }
 }

@@ -7,7 +7,7 @@ import './PillarToken.sol';
 contract TeamAllocation is Ownable {
   using SafeMath for uint;
   PillarToken plr;
-  uint public constant totalAllocationTokens = 3000000;
+  uint public constant totalAllocationTokens = 24000000;
   uint public remainingAllocationTokens = 3000000;
   uint public unlockedAt;
   mapping (address => uint) allocations;

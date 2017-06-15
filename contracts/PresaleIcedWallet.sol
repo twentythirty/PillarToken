@@ -24,7 +24,7 @@ contract PresaleIcedWallet is Multisig, Shareable, DayLimit {
    function PresaleIcedWallet(address[] _owners, uint _required, uint _daylimit)
      Shareable(_owners, _required)
      DayLimit(_daylimit) {
-       lockPeriod = now.add(9 years);
+       lockPeriod = now.add(10 years);
      }
 
    /**
