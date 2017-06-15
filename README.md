@@ -9,6 +9,8 @@ The naming convention used describs the purpose of the individual contracts.
 1) PillarPreSale - in development
 2) PillarToken - deployed in kovan test net
 3) TeamAllocation - in development
+4) PresaleIcedWallet - in development
+5) PillarFutureSaleWallet - in development
 
 ## Dependencies
 
@@ -28,30 +30,30 @@ truffle compile - compile all contracts
 
 truffle test - run tests
 
-## Specification 
+## Specification
 ### PillarToken
   Extends Zeppelin Ownable and StandardToken classes.   
   This class will handle the ICO transaction.
 
-#### Methods 
+#### Methods
 ##### pause() - emergency stop of ICO
- > function pause() onlyOwner external returns (bool) 
+ > function pause() onlyOwner external returns (bool)
 
 #####  payable - validator function
- > function() payable isFundingModeStop external 
- 
+ > function() payable isFundingModeStop external
+
  ##### purchase - carry out purchase transaction
  > function purchase() payable isFundingModeStop external
- 
+
 #####  finalize - end the ICO gracefully
  > finalize() external onlyOwner
 
-#####  refund - 
+#####  refund -
  > function refund() isFundingModeStop external
 
 #### Events
 ##### Refund
 > event Refund(address indexed _from,uint256 _value);
-    
+
 ##### Migrate    
 > event Migrate(address indexed _from, address indexed _to, uint256 _value);
