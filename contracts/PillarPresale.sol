@@ -2,10 +2,11 @@ pragma solidity ^0.4.11;
 
 import './zeppelin/SafeMath.sol';
 import './zeppelin/ownership/Ownable.sol';
+import './zeppelin/lifecycle/Pausable.sol';
 import './PillarToken.sol';
-import './PresaleIcedWallet.sol';
+import './IcedStorage.sol';
 
-contract PillarPresale is Ownable {
+contract PillarPresale is Pausable {
   using SafeMath for uint;
   uint public constant totalSupply = 16000000;
   address pillarTokenFactory;
@@ -21,10 +22,11 @@ contract PillarPresale is Ownable {
   // flags whether ICO is afoot.
   bool fundingMode = true;
 
-  uint constant PRESALE_PRICE = 2857142857000 wei;
+  //price will be in finney
+  uint constant PRESALE_PRICE = 1 finney;
 
   PillarToken public plr;
-  PresaleIcedWallet public plWallet;
+  IcedStorage public plWallet;
 
   modifier isFundable() {
       if (!fundingMode) throw;
@@ -39,14 +41,6 @@ contract PillarPresale is Ownable {
     pillarTokenFactory = _pillarTokenFactory;
     totalUsedTokens = 0;
   }
-
-  /**
-  * Function to pause the ICO. Will be used for fire fighting
-  */
-  function pause() onlyOwner external returns (bool) {
-    fundingMode = false;
-  }
-
 
   function () external isFundable payable {
     if(now > salePeriod) throw;
@@ -80,12 +74,6 @@ contract PillarPresale is Ownable {
     if(remain > 0) {
       plr.allocateTokens(address(plWallet),remain);
     }
-
-    /*
-    for(uint i = 0;i<purchasers.length;i++) {
-      plr.assignTokens(purchasers[i],balances[purchasers[i]]);
-    }
-    */
   }
 
   function balanceOf(address owner) returns (uint) {
@@ -94,5 +82,9 @@ contract PillarPresale is Ownable {
 
   function getPurchasers() external returns (address[]) {
     return purchasers;
+  }
+
+  function numOfPurchasers() external returns (uint) {
+    return purchasers.length;
   }
 }

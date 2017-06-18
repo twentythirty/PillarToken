@@ -1,7 +1,7 @@
 pragma solidity ^0.4.11;
 
+import './IcedStorage.sol';
 import './TeamAllocation.sol';
-import './PillarFutureSaleWallet.sol';
 import './zeppelin/SafeMath.sol';
 import './zeppelin/token/StandardToken.sol';
 import './zeppelin/ownership/Ownable.sol';
@@ -11,43 +11,43 @@ contract PillarToken is StandardToken, Ownable {
     using SafeMath for uint;
     string public constant name = "PILLAR";
     string public constant symbol = "PLR";
-    //uint8 costs more gas than uint246/uint so changed the data type
     uint public constant decimals = 18;
 
-    TeamAllocation public lockedAllocation;
-    PillarFutureSaleWallet public futureSale;
+    IcedStorage public futureSale;
+    TeamAllocation teamAllocation;
 
     uint constant public minTokensForSale = 3000000;
     uint constant public totalAllocationTokens = 24000000;
-    /* Check ETH/USD rate on the day of the ICO */
-    /* 1 ETH = 350 USD ; 1/350 of USD expressed in WEI */
-    // Need to revisit this value at later point
-    uint public constant tokenPrice  = 2857142857000 wei;
+    uint constant public futureTokens = 120000000;
+    uint constant public teamAllocationTokens = 24000000;
 
-    //address corresponding to the pillar token factory where the fund raised will be held.
+    // Need to revisit this value at later point
+    uint public constant tokenPrice  = 1 finney;
+
+    // address corresponding to the pillar token factory where the fund raised will be held.
     address public pillarTokenFactory;
 
-    //Sale Period
+    // Sale Period
     uint public salePeriod;
 
     uint fundingStartBlock;
     uint fundingStopBlock;
 
-    // flags whether ICO is afoot.
+    /* flags whether ICO is afoot.*/
     bool fundingMode = true;
 
-    //total used tokens
+    /*total used tokens*/
     uint totalUsedTokens;
 
     event Refund(address indexed _from,uint256 _value);
     event Migrate(address indexed _from, address indexed _to, uint256 _value);
 
-    modifier isFundingModeStart() {
+    modifier isNotFundable() {
         if (fundingMode) throw;
         _;
     }
 
-    modifier isFundingModeStop() {
+    modifier isFundable() {
         if (!fundingMode) throw;
         _;
     }
@@ -61,18 +61,17 @@ contract PillarToken is StandardToken, Ownable {
       totalSupply = 560000000;
     }
 
-    /**
+    /*
     * Function to pause the ICO. Will be used for fire fighting
     */
-    function pause() onlyOwner isFundingModeStop external returns (bool) {
+    function pause() onlyOwner isFundable external returns (bool) {
       fundingMode = false;
     }
 
     /*
     * Function used to validate conditions in case the contract is called with incorrect data
     */
-    function() payable isFundingModeStop external {
-
+    function() payable isFundable external {
       if(now > salePeriod) throw;
       if(block.number < fundingStartBlock) throw;
       if(block.number > fundingStopBlock) throw;
@@ -80,24 +79,8 @@ contract PillarToken is StandardToken, Ownable {
 
       if (msg.value == 0) throw;
 
-      // total tokens purchased is received gas/cost of 1 token
-      uint numTokens = msg.value.div(tokenPrice);
-      totalUsedTokens = totalUsedTokens.add(numTokens);
-      if (totalUsedTokens > totalSupply) throw;
-
-
-      balances[msg.sender] = balances[msg.sender].add(numTokens);
-
-      Transfer(0, msg.sender, numTokens);
-    }
-
-    function purchase() payable isFundingModeStop external {
-      if(now > salePeriod) throw;
-      if(block.number < fundingStartBlock) throw;
-      if(block.number > fundingStopBlock) throw;
-      if(totalUsedTokens >= totalSupply) throw;
-
-      if (msg.value == 0) throw;
+      //transfer money to PillarTokenFactory MultisigWallet
+      if(!pillarTokenFactory.send(msg.value)) throw;
 
       uint numTokens = msg.value.div(tokenPrice);
       totalUsedTokens = totalUsedTokens.add(numTokens);
@@ -108,22 +91,49 @@ contract PillarToken is StandardToken, Ownable {
       Transfer(0, msg.sender, numTokens);
     }
 
+    /*
+    * Function that performs the actual purchase
+    */
+    function purchase() payable isFundable external {
+      if(now > salePeriod) throw;
+      if(block.number < fundingStartBlock) throw;
+      if(block.number > fundingStopBlock) throw;
+      if(totalUsedTokens >= totalSupply) throw;
+
+      if (msg.value == 0) throw;
+
+      //transfer money to PillarTokenFactory MultisigWallet
+      if(!pillarTokenFactory.send(msg.value)) throw;
+
+      uint numTokens = msg.value.div(tokenPrice);
+      totalUsedTokens = totalUsedTokens.add(numTokens);
+      if (totalUsedTokens > totalSupply) throw;
+
+      balances[msg.sender] = balances[msg.sender].add(numTokens);
+
+      Transfer(0, msg.sender, numTokens);
+    }
+
+    /*
+    * Function to check sale period
+    */
     function checkSalePeriod() external constant returns (uint) {
       return salePeriod;
     }
+
     /*
-    function totalSupply() constant returns (uint totalSupply) {
-      // return totalTokens;
-      totalSupply = tokensAvailableForSale;
-    }
+    * Function that reports whether funding is still active
     */
-    function fundingActive() constant isFundingModeStop external returns (bool){
+    function fundingActive() constant isFundable external returns (bool){
       if(block.number < fundingStartBlock || block.number > fundingStopBlock || totalUsedTokens > totalSupply){
         return false;
       }
       return true;
     }
 
+    /*
+    * Function that reports the number of tokens left
+    */
     function numberOfTokensLeft() constant external returns (uint256) {
       if (block.number > fundingStopBlock) {
         return 0;
@@ -132,12 +142,17 @@ contract PillarToken is StandardToken, Ownable {
       return tokensAvailableForSale;
     }
 
+    /*
+    * Function that checks the status of ICO
+    */
     function isFinalized() constant external returns (bool){
       return !fundingMode;
     }
 
-
-    function finalize() isFundingModeStop onlyOwner external {
+    /*
+    * Function that finalizes the ICO
+    */
+    function finalize() isFundable onlyOwner external {
       if ((block.number <= fundingStopBlock ||
         totalUsedTokens < minTokensForSale) &&
         totalUsedTokens < totalSupply) throw;
@@ -145,14 +160,15 @@ contract PillarToken is StandardToken, Ownable {
         // switch funding mode off
         fundingMode = false;
 
+        teamAllocation = new TeamAllocation();
+
+        balances[address(teamAllocation)] = teamAllocationTokens;
+        //transfer any balance available to Pillar Multisig Wallet
         if (!pillarTokenFactory.send(this.balance)) throw;
 
-        totalUsedTokens = totalUsedTokens.add(totalAllocationTokens);
-        balances[lockedAllocation] = balances[lockedAllocation].add(totalAllocationTokens);
-        Transfer(0, lockedAllocation, totalAllocationTokens);
     }
 
-    function refund() isFundingModeStop external {
+    function refund() isFundable external {
       if(block.number <= fundingStopBlock) throw;
       if(totalUsedTokens >= minTokensForSale) throw;
 
@@ -161,23 +177,23 @@ contract PillarToken is StandardToken, Ownable {
 
       balances[msg.sender] = 0;
 
-      totalUsedTokens = totalUsedTokens.sub(plrValue);
-
-      uint ethValue = plrValue.div(tokenPrice);
+      uint ethValue = plrValue.mul(tokenPrice);
       if(!msg.sender.send(ethValue)) throw;
       Refund(msg.sender, ethValue);
     }
 
-    //Is this required?
-    function allocateTokens(address _to,uint _tokens) onlyOwner external {
+    /*
+    * Function used to allocate tokens to an address.
+    * This will be used for team allocation and presale.
+    */
+    function allocateTokens(address _to,uint _tokens) isNotFundable onlyOwner external {
       if (!fundingMode) throw;
 
       if ((block.number <= fundingStopBlock ||
         totalUsedTokens < minTokensForSale) &&
-        totalUsedTokens < totalSupply &&
-        (totalUsedTokens - _tokens) < 0) throw;
+        totalUsedTokens < totalSupply) throw;
 
       totalUsedTokens = totalUsedTokens.sub(_tokens);
-      balances[_to] += _tokens;
+      balances[_to] = balances[_to].add(_tokens);
     }
 }

@@ -6,7 +6,7 @@ import "./zeppelin/ownership/Shareable.sol";
 import "./zeppelin/DayLimit.sol";
 import "./zeppelin/SafeMath.sol";
 
-contract PresaleIcedWallet is Multisig, Shareable, DayLimit {
+contract PillarFutureSaleWallet is Multisig, Shareable, DayLimit {
   using SafeMath for uint;
 
   uint lockPeriod;
@@ -21,10 +21,10 @@ contract PresaleIcedWallet is Multisig, Shareable, DayLimit {
     * @param _owners A list of owners.
     * @param _required The amount required for a transaction to be approved.
     */
-   function PresaleIcedWallet(address[] _owners, uint _required, uint _daylimit)
+   function PillarFutureSaleWallet(address[] _owners, uint _required, uint _daylimit)
      Shareable(_owners, _required)
      DayLimit(_daylimit) {
-       lockPeriod = now.add(10 years);
+       lockPeriod = now.add(3 years);
      }
 
    /**

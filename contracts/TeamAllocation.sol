@@ -1,15 +1,14 @@
 pragma solidity ^0.4.11;
-
+import './PillarToken.sol';
 import './zeppelin/SafeMath.sol';
 import './zeppelin/ownership/Ownable.sol';
-import './PillarToken.sol';
 
 contract TeamAllocation is Ownable {
   using SafeMath for uint;
-  PillarToken plr;
   uint public constant totalAllocationTokens = 24000000;
   uint public remainingAllocationTokens = 3000000;
   uint public unlockedAt;
+  PillarToken plr;
   mapping (address => uint) allocations;
   address[] members;
 
@@ -27,7 +26,12 @@ contract TeamAllocation is Ownable {
     // Locked time of approximately 9 months before team members are able to redeeem tokens.
     uint nineMonths = 9 * 30 days;
     unlockedAt = now.add(nineMonths);
-    //member allocations hardcoded
+    /*
+    * THESE ARE DUMMY ADDRESSES - Will be replaced before deploying to mainnet.
+    */
+    allocations[0x65a5A157F5097b5820A8f742f4432344f9dC94E7] = 100000;
+    allocations[0x9624F5f8fA60107828A491252e62E20adA2b24FC] = 230000;
+    allocations[0x2DA8e0F841BeDf46bb7689F7dc7F768802F1B9C5] = 570000;
   }
 /*
   function assignTokensToTeamMember(address _teamMemberAddress,uint _tokens) onlyOwner returns(bool){
