@@ -6,6 +6,8 @@ import './zeppelin/SafeMath.sol';
 import './zeppelin/token/StandardToken.sol';
 import './zeppelin/ownership/Ownable.sol';
 
+/// @title PillarToken - Crowdfunding code for the Pillar Project
+/// @author Parthasarathy Ramanujam, Gustavo Guimaraes, Ronak Thacker
 contract PillarToken is StandardToken, Ownable {
 
     using SafeMath for uint;
@@ -21,10 +23,10 @@ contract PillarToken is StandardToken, Ownable {
     uint constant public futureTokens = 120000000;
     uint constant public teamAllocationTokens = 24000000;
 
-    // Need to revisit this value at later point
+    // Funding amount in Finney
     uint public constant tokenPrice  = 1 finney;
 
-    // address corresponding to the pillar token factory where the fund raised will be held.
+    // Multisigwallet where the proceeds will be stored.
     address public pillarTokenFactory;
 
     // Sale Period
@@ -33,10 +35,10 @@ contract PillarToken is StandardToken, Ownable {
     uint fundingStartBlock;
     uint fundingStopBlock;
 
-    /* flags whether ICO is afoot.*/
+    // flags whether ICO is afoot.
     bool fundingMode = true;
 
-    /*total used tokens*/
+    //total used tokens
     uint totalUsedTokens;
 
     event Refund(address indexed _from,uint256 _value);
@@ -52,6 +54,10 @@ contract PillarToken is StandardToken, Ownable {
         _;
     }
 
+    //@notice  Constructor of PillarToken
+    //@param `_pillarTokenFactory` - multisigwallet address to store proceeds.
+    //@param `_fundingStartBlock` - block from when ICO commences
+    //@param `_fundingStopBlock` - block from when ICO ends.
     function PillarToken(address _pillarTokenFactory, uint256 _fundingStartBlock, uint256 _fundingStopBlock) {
       salePeriod = now.add(60 hours);
       pillarTokenFactory = _pillarTokenFactory;
@@ -61,16 +67,14 @@ contract PillarToken is StandardToken, Ownable {
       totalSupply = 560000000;
     }
 
-    /*
-    * Function to pause the ICO. Will be used for fire fighting
-    */
+    //@notice Used to pause the contract for firefighting if any.
+    //@notice can be called only when the contract is fundable
     function pause() onlyOwner isFundable external returns (bool) {
       fundingMode = false;
     }
 
-    /*
-    * Function used to validate conditions in case the contract is called with incorrect data
-    */
+    //@notice Fallback function that accepts the ether and allocates tokens to
+    //the msg.sender corresponding to msg.value
     function() payable isFundable external {
       if(now > salePeriod) throw;
       if(block.number < fundingStartBlock) throw;
@@ -91,9 +95,8 @@ contract PillarToken is StandardToken, Ownable {
       Transfer(0, msg.sender, numTokens);
     }
 
-    /*
-    * Function that performs the actual purchase
-    */
+    //@notice function that accepts the ether and allocates tokens to
+    //the msg.sender corresponding to msg.value
     function purchase() payable isFundable external {
       if(now > salePeriod) throw;
       if(block.number < fundingStartBlock) throw;
@@ -114,16 +117,12 @@ contract PillarToken is StandardToken, Ownable {
       Transfer(0, msg.sender, numTokens);
     }
 
-    /*
-    * Function to check sale period
-    */
+    //@notice Function that reports how long the sale is active
     function checkSalePeriod() external constant returns (uint) {
       return salePeriod;
     }
 
-    /*
-    * Function that reports whether funding is still active
-    */
+    //@notice Function that reports whether funding is active.
     function fundingActive() constant isFundable external returns (bool){
       if(block.number < fundingStartBlock || block.number > fundingStopBlock || totalUsedTokens > totalSupply){
         return false;
@@ -131,9 +130,7 @@ contract PillarToken is StandardToken, Ownable {
       return true;
     }
 
-    /*
-    * Function that reports the number of tokens left
-    */
+    //@notice Function reports the number of tokens available for sale
     function numberOfTokensLeft() constant external returns (uint256) {
       if (block.number > fundingStopBlock) {
         return 0;
@@ -142,16 +139,9 @@ contract PillarToken is StandardToken, Ownable {
       return tokensAvailableForSale;
     }
 
-    /*
-    * Function that checks the status of ICO
-    */
-    function isFinalized() constant external returns (bool){
-      return !fundingMode;
-    }
-
-    /*
-    * Function that finalizes the ICO
-    */
+    //@notice Finalize the ICO, send team allocation tokens
+    //@notice send any remaining balance to the MultisigWallet
+    //@notice unsold tokens will be sent to icedwallet
     function finalize() isFundable onlyOwner external {
       if ((block.number <= fundingStopBlock ||
         totalUsedTokens < minTokensForSale) &&
@@ -168,6 +158,8 @@ contract PillarToken is StandardToken, Ownable {
 
     }
 
+    //@notice Function that can be called by purchasers to refund
+    //@notice Used only in case the function isn't successful.
     function refund() isFundable external {
       if(block.number <= fundingStopBlock) throw;
       if(totalUsedTokens >= minTokensForSale) throw;
@@ -182,10 +174,16 @@ contract PillarToken is StandardToken, Ownable {
       Refund(msg.sender, ethValue);
     }
 
-    /*
-    * Function used to allocate tokens to an address.
-    * This will be used for team allocation and presale.
-    */
+    //@notice Function used for funding in case of refund.
+    //@notice Can be called only by the Owner
+    function allocateForRefund() external onlyOwner {
+      //does nothing just accepts and stores the ether
+    }
+
+    //@notice Function to allocate tokens to an user.
+    //@param `_to` the address of an user
+    //@param `_tokens` number of tokens to be allocated.
+    //@notice Can be called only when funding is not active and only by the owner
     function allocateTokens(address _to,uint _tokens) isNotFundable onlyOwner external {
       if (!fundingMode) throw;
 

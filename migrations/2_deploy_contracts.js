@@ -12,9 +12,9 @@ const presaleStartBlock = 0;
 const presaleEndBlock = 1000;
 const icoStartBlock = 0;
 const icoEndBlock = 10000000;
-const ownerOne = '0xb45968c6934bb807fe562c309dfeb894cceaabcd';
-const ownerTwo = '0x0c158cef8f6cdbee3ea40dc5f8d5b397902e352c';
-const ownerThree = '0xce4ee7de4a08f0f9951f43e04a251f9ef4197d7c';
+const ownerOne = '0x413fbdb50fa9fecd05c531a0c852c14b9ef70bd2';
+const ownerTwo = '0x84d7096063d4c4c44a0111a081e11ea550e6b0c8';
+const ownerThree = '0x8fba2d3c59b086ddbe3a82fdcaceab53db7fadf7';
 
 module.exports = function(deployer) {
 
