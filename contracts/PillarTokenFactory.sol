@@ -1,128 +1,283 @@
-pragma solidity ^0.4.11;
 
+pragma solidity ^0.4.0;
 
-import "./zeppelin/ownership/Multisig.sol";
-import "./zeppelin/ownership/Shareable.sol";
-import "./zeppelin/DayLimit.sol";
-import "./zeppelin/SafeMath.sol";
+//Multisigwallet based on https://github.com/golemfactory/golem-crowdfunding/blob/master/contracts/MultiSigWallet.sol
 
-contract PillarFutureSaleWallet is Multisig, Shareable, DayLimit {
-  using SafeMath for uint;
+/// @title Multisignature wallet - Allows multiple parties to agree on transactions before execution.
+/// @author Stefan George - <stefan.george@consensys.net>
+contract PillarTokenFactory {
 
-  uint lockPeriod;
-  struct Transaction {
-     address to;
-     uint value;
-     bytes data;
-   }
+    event Confirmation(address sender, bytes32 transactionHash);
+    event Revocation(address sender, bytes32 transactionHash);
+    event Submission(bytes32 transactionHash);
+    event Execution(bytes32 transactionHash);
+    event Deposit(address sender, uint value);
+    event OwnerAddition(address owner);
+    event OwnerRemoval(address owner);
+    event RequiredUpdate(uint required);
 
-   /**
-    * Constructor, sets the owners addresses, number of approvals required, and daily spending limit
-    * @param _owners A list of owners.
-    * @param _required The amount required for a transaction to be approved.
-    */
-   function PillarFutureSaleWallet(address[] _owners, uint _required, uint _daylimit)
-     Shareable(_owners, _required)
-     DayLimit(_daylimit) {
-       lockPeriod = now.add(3 years);
-     }
+    mapping (bytes32 => Transaction) public transactions;
+    mapping (bytes32 => mapping (address => bool)) public confirmations;
+    mapping (address => bool) public isOwner;
+    address[] owners;
+    bytes32[] transactionList;
+    uint public required;
 
-   /**
-    * @dev destroys the contract sending everything to `_to`.
-    */
-   function destroy(address _to) onlymanyowners(keccak256(msg.data)) external {
-     selfdestruct(_to);
-   }
+    struct Transaction {
+        address destination;
+        uint value;
+        bytes data;
+        uint nonce;
+        bool executed;
+    }
 
-   /**
-    * @dev Fallback function, receives value and emits a deposit event.
-    */
-   function() payable {
-     // just being sent some cash?
-     if (msg.value > 0)
-       Deposit(msg.sender, msg.value);
-   }
+    modifier onlyWallet() {
+        if (msg.sender != address(this))
+            throw;
+        _;
+    }
 
-   /**
-    * @dev Outside-visible transaction entry point. Executes transaction immediately if below daily
-    * spending limit. If not, goes into multisig process. We provide a hash on return to allow the
-    * sender to provide shortcuts for the other confirmations (allowing them to avoid replicating
-    * the _to, _value, and _data arguments). They still get the option of using them if they want,
-    * anyways.
-    * @param _to The receiver address
-    * @param _value The value to send
-    * @param _data The data part of the transaction
-    */
-   function execute(address _to, uint _value, bytes _data) external onlyOwner returns (bytes32 _r) {
+    modifier signaturesFromOwners(bytes32 transactionHash, uint8[] v, bytes32[] rs) {
+        for (uint i=0; i<v.length; i++)
+            if (!isOwner[ecrecover(transactionHash, v[i], rs[i], rs[v.length + i])])
+                throw;
+        _;
+    }
 
-     if(now < lockPeriod) throw;
+    modifier ownerDoesNotExist(address owner) {
+        if (isOwner[owner])
+            throw;
+        _;
+    }
 
-     // first, take the opportunity to check that we're under the daily limit.
-     if (underLimit(_value)) {
-       SingleTransact(msg.sender, _value, _to, _data);
-       // yes - just execute the call.
-       if (!_to.call.value(_value)(_data)) {
-         throw;
-       }
-       return 0;
-     }
-     // determine our operation hash.
-     _r = keccak256(msg.data, block.number);
-     if (!confirm(_r) && txs[_r].to == 0) {
-       txs[_r].to = _to;
-       txs[_r].value = _value;
-       txs[_r].data = _data;
-       ConfirmationNeeded(_r, msg.sender, _value, _to, _data);
-     }
-   }
+    modifier ownerExists(address owner) {
+        if (!isOwner[owner])
+            throw;
+        _;
+    }
 
-   /**
-    * @dev Confirm a transaction by providing just the hash. We use the previous transactions map,
-    * txs, in order to determine the body of the transaction from the hash provided.
-    * @param _h The transaction hash to approve.
-    */
-   function confirm(bytes32 _h) onlymanyowners(_h) returns (bool) {
-     if (txs[_h].to != 0) {
-       if (!txs[_h].to.call.value(txs[_h].value)(txs[_h].data)) {
-         throw;
-       }
-       MultiTransact(msg.sender, _h, txs[_h].value, txs[_h].to, txs[_h].data);
-       delete txs[_h];
-       return true;
-     }
-   }
+    modifier confirmed(bytes32 transactionHash, address owner) {
+        if (!confirmations[transactionHash][owner])
+            throw;
+        _;
+    }
 
-   /**
-    * @dev Updates the daily limit value.
-    * @param _newLimit  Uint to represent the new limit.
-    */
-   function setDailyLimit(uint _newLimit) onlymanyowners(keccak256(msg.data)) external {
-     _setDailyLimit(_newLimit);
-   }
+    modifier notConfirmed(bytes32 transactionHash, address owner) {
+        if (confirmations[transactionHash][owner])
+            throw;
+        _;
+    }
 
-   /**
-    * @dev Resets the value spent to enable more spending
-    */
-   function resetSpentToday() onlymanyowners(keccak256(msg.data)) external {
-     _resetSpentToday();
-   }
+    modifier notExecuted(bytes32 transactionHash) {
+        if (transactions[transactionHash].executed)
+            throw;
+        _;
+    }
 
+    modifier notNull(address destination) {
+        if (destination == 0)
+            throw;
+        _;
+    }
 
-   // INTERNAL METHODS
-   /**
-    * @dev Clears the list of transactions pending approval.
-    */
-   function clearPending() internal {
-     uint length = pendingsIndex.length;
-     for (uint i = 0; i < length; ++i) {
-       delete txs[pendingsIndex[i]];
-     }
-     super.clearPending();
-   }
+    modifier validRequired(uint _ownerCount, uint _required) {
+        if (   _required > _ownerCount
+            || _required == 0
+            || _ownerCount == 0)
+            throw;
+        _;
+    }
 
+    function addOwner(address owner)
+        external
+        onlyWallet
+        ownerDoesNotExist(owner)
+    {
+        isOwner[owner] = true;
+        owners.push(owner);
+        OwnerAddition(owner);
+    }
 
-   // FIELDS
+    function removeOwner(address owner)
+        external
+        onlyWallet
+        ownerExists(owner)
+    {
+        isOwner[owner] = false;
+        for (uint i=0; i<owners.length - 1; i++)
+            if (owners[i] == owner) {
+                owners[i] = owners[owners.length - 1];
+                break;
+            }
+        owners.length -= 1;
+        if (required > owners.length)
+            updateRequired(owners.length);
+        OwnerRemoval(owner);
+    }
 
-   // pending transactions we have at present.
-   mapping (bytes32 => Transaction) txs;
- }
+    function updateRequired(uint _required)
+        public
+        onlyWallet
+        validRequired(owners.length, _required)
+    {
+        required = _required;
+        RequiredUpdate(_required);
+    }
+
+    function addTransaction(address destination, uint value, bytes data, uint nonce)
+        private
+        notNull(destination)
+        returns (bytes32 transactionHash)
+    {
+        transactionHash = sha3(destination, value, data, nonce);
+        if (transactions[transactionHash].destination == 0) {
+            transactions[transactionHash] = Transaction({
+                destination: destination,
+                value: value,
+                data: data,
+                nonce: nonce,
+                executed: false
+            });
+            transactionList.push(transactionHash);
+            Submission(transactionHash);
+        }
+    }
+
+    function submitTransaction(address destination, uint value, bytes data, uint nonce)
+        external
+        returns (bytes32 transactionHash)
+    {
+        transactionHash = addTransaction(destination, value, data, nonce);
+        confirmTransaction(transactionHash);
+    }
+
+    function submitTransactionWithSignatures(address destination, uint value, bytes data, uint nonce, uint8[] v, bytes32[] rs)
+        external
+        returns (bytes32 transactionHash)
+    {
+        transactionHash = addTransaction(destination, value, data, nonce);
+        confirmTransactionWithSignatures(transactionHash, v, rs);
+    }
+
+    function addConfirmation(bytes32 transactionHash, address owner)
+        private
+        notConfirmed(transactionHash, owner)
+    {
+        confirmations[transactionHash][owner] = true;
+        Confirmation(owner, transactionHash);
+    }
+
+    function confirmTransaction(bytes32 transactionHash)
+        public
+        ownerExists(msg.sender)
+    {
+        addConfirmation(transactionHash, msg.sender);
+        executeTransaction(transactionHash);
+    }
+
+    function confirmTransactionWithSignatures(bytes32 transactionHash, uint8[] v, bytes32[] rs)
+        public
+        signaturesFromOwners(transactionHash, v, rs)
+    {
+        for (uint i=0; i<v.length; i++)
+            addConfirmation(transactionHash, ecrecover(transactionHash, v[i], rs[i], rs[i + v.length]));
+        executeTransaction(transactionHash);
+    }
+
+    function executeTransaction(bytes32 transactionHash)
+        public
+        notExecuted(transactionHash)
+    {
+        if (isConfirmed(transactionHash)) {
+            Transaction tx = transactions[transactionHash];
+            tx.executed = true;
+            if (!tx.destination.call.value(tx.value)(tx.data))
+                throw;
+            Execution(transactionHash);
+        }
+    }
+
+    function revokeConfirmation(bytes32 transactionHash)
+        external
+        ownerExists(msg.sender)
+        confirmed(transactionHash, msg.sender)
+        notExecuted(transactionHash)
+    {
+        confirmations[transactionHash][msg.sender] = false;
+        Revocation(msg.sender, transactionHash);
+    }
+
+    function PillarTokenFactory(address[] _owners, uint _required)
+        validRequired(_owners.length, _required)
+    {
+        for (uint i=0; i<_owners.length; i++)
+            isOwner[_owners[i]] = true;
+        owners = _owners;
+        required = _required;
+    }
+
+    function()
+        payable
+    {
+        if (msg.value > 0)
+            Deposit(msg.sender, msg.value);
+    }
+
+    function isConfirmed(bytes32 transactionHash)
+        public
+        constant
+        returns (bool)
+    {
+        uint count = 0;
+        for (uint i=0; i<owners.length; i++)
+            if (confirmations[transactionHash][owners[i]])
+                count += 1;
+            if (count == required)
+                return true;
+    }
+
+    function confirmationCount(bytes32 transactionHash)
+        external
+        constant
+        returns (uint count)
+    {
+        for (uint i=0; i<owners.length; i++)
+            if (confirmations[transactionHash][owners[i]])
+                count += 1;
+    }
+
+    function filterTransactions(bool isPending)
+        private
+        returns (bytes32[] _transactionList)
+    {
+        bytes32[] memory _transactionListTemp = new bytes32[](transactionList.length);
+        uint count = 0;
+        for (uint i=0; i<transactionList.length; i++)
+            if (   isPending && !transactions[transactionList[i]].executed
+                || !isPending && transactions[transactionList[i]].executed)
+            {
+                _transactionListTemp[count] = transactionList[i];
+                count += 1;
+            }
+        _transactionList = new bytes32[](count);
+        for (i=0; i<count; i++)
+            if (_transactionListTemp[i] > 0)
+                _transactionList[i] = _transactionListTemp[i];
+    }
+
+    function getPendingTransactions()
+        external
+        constant
+        returns (bytes32[] _transactionList)
+    {
+        return filterTransactions(true);
+    }
+
+    function getExecutedTransactions()
+        external
+        constant
+        returns (bytes32[] _transactionList)
+    {
+        return filterTransactions(false);
+    }
+}
