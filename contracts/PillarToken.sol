@@ -1,6 +1,5 @@
 pragma solidity ^0.4.11;
 
-import './IcedStorage.sol';
 import './TeamAllocation.sol';
 import './zeppelin/SafeMath.sol';
 import './zeppelin/token/StandardToken.sol';
@@ -15,7 +14,7 @@ contract PillarToken is StandardToken, Ownable {
     string public constant symbol = "PLR";
     uint public constant decimals = 18;
 
-    IcedStorage public futureSale;
+    address public futureSale;
     TeamAllocation teamAllocation;
 
     uint constant public minTokensForSale = 3000000;
@@ -67,7 +66,7 @@ contract PillarToken is StandardToken, Ownable {
       fundingStopBlock = _fundingStopBlock;
       totalUsedTokens = 0;
       totalSupply = 800000000;
-      futureSale = IcedStorage(_icedWallet);
+      futureSale = _icedWallet;
     }
 
     //@notice Used to pause the contract for firefighting if any.
@@ -157,7 +156,7 @@ contract PillarToken is StandardToken, Ownable {
 
         balances[address(teamAllocation)] = teamAllocationTokens;
         //allocate unsold tokens to iced storage
-        balances[address(futureSale)] = numberOfTokensLeft();
+        balances[futureSale] = numberOfTokensLeft();
         //transfer any balance available to Pillar Multisig Wallet
         if (!pillarTokenFactory.send(this.balance)) throw;
     }
