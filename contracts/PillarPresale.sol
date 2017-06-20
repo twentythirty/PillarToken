@@ -25,7 +25,6 @@ contract PillarPresale is Pausable {
   //price will be in finney
   uint constant PRESALE_PRICE = 1 finney;
 
-  PillarToken public plr;
   IcedStorage public plWallet;
 
   modifier isFundable() {
@@ -64,16 +63,9 @@ contract PillarPresale is Pausable {
 
     if(address(plWallet) == address(0)) throw;
 
-    if(address(plr) == address(0)) throw;
-
     //migrate the ether to the pillarTokenFactory wallet
     if(!pillarTokenFactory.send(this.balance)) throw;
 
-    //move the unsold tokens to a multisig wallet
-    uint remain = totalSupply.sub(totalUsedTokens);
-    if(remain > 0) {
-      plr.allocateTokens(address(plWallet),remain);
-    }
   }
 
   function balanceOf(address owner) returns (uint) {
