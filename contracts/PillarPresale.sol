@@ -8,7 +8,7 @@ import './IcedStorage.sol';
 
 contract PillarPresale is Pausable {
   using SafeMath for uint;
-  uint public constant totalSupply = 16000000;
+  uint public totalSupply = 16000000;
   address pillarTokenFactory;
   uint totalUsedTokens;
   mapping(address => uint) balances;
@@ -52,8 +52,17 @@ contract PillarPresale is Pausable {
     totalUsedTokens = totalUsedTokens.add(numTokens);
     if (totalUsedTokens > totalSupply) throw;
 
+    //transfer money to PillarTokenFactory MultisigWallet
+    if(!pillarTokenFactory.send(msg.value)) throw;
+
     purchasers.push(msg.sender);
     balances[msg.sender] = balances[msg.sender].add(numTokens);
+  }
+
+  //@notice Function reports the number of tokens available for sale
+  function numberOfTokensLeft() constant returns (uint256) {
+    uint tokensAvailableForSale = totalSupply.sub(totalUsedTokens);
+    return tokensAvailableForSale;
   }
 
   function finalize() external onlyOwner {

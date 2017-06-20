@@ -1,11 +1,11 @@
 
-pragma solidity ^0.4.0;
+pragma solidity ^0.4.11;
 
 //Multisigwallet based on https://github.com/golemfactory/golem-crowdfunding/blob/master/contracts/MultiSigWallet.sol
 
 /// @title Multisignature wallet - Allows multiple parties to agree on transactions before execution.
 /// @author Stefan George - <stefan.george@consensys.net>
-contract PillarTokenFactory {
+contract TestWallet {
 
     event Confirmation(address sender, bytes32 transactionHash);
     event Revocation(address sender, bytes32 transactionHash);
@@ -207,7 +207,7 @@ contract PillarTokenFactory {
         Revocation(msg.sender, transactionHash);
     }
 
-    function PillarTokenFactory(address[] _owners, uint _required)
+    function TestWallet(address[] _owners, uint _required)
         validRequired(_owners.length, _required)
     {
         for (uint i=0; i<_owners.length; i++)

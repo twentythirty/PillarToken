@@ -22,6 +22,7 @@ contract PillarToken is StandardToken, Ownable {
     uint constant public totalAllocationTokens = 24000000;
     uint constant public futureTokens = 120000000;
     uint constant public teamAllocationTokens = 24000000;
+    uint constant public totalAvailableForSale = 560000000;
 
     // Funding amount in Finney
     uint public constant tokenPrice  = 1 finney;
@@ -58,13 +59,15 @@ contract PillarToken is StandardToken, Ownable {
     //@param `_pillarTokenFactory` - multisigwallet address to store proceeds.
     //@param `_fundingStartBlock` - block from when ICO commences
     //@param `_fundingStopBlock` - block from when ICO ends.
-    function PillarToken(address _pillarTokenFactory, uint256 _fundingStartBlock, uint256 _fundingStopBlock) {
+    //@param `_icedWallet` - Multisigwallet address to which unsold tokens are assigned
+    function PillarToken(address _pillarTokenFactory, uint256 _fundingStartBlock, uint256 _fundingStopBlock, address _icedWallet) {
       salePeriod = now.add(60 hours);
       pillarTokenFactory = _pillarTokenFactory;
       fundingStartBlock = _fundingStartBlock;
       fundingStopBlock = _fundingStopBlock;
       totalUsedTokens = 0;
-      totalSupply = 560000000;
+      totalSupply = 800000000;
+      futureSale = IcedStorage(_icedWallet);
     }
 
     //@notice Used to pause the contract for firefighting if any.
@@ -101,7 +104,7 @@ contract PillarToken is StandardToken, Ownable {
       if(now > salePeriod) throw;
       if(block.number < fundingStartBlock) throw;
       if(block.number > fundingStopBlock) throw;
-      if(totalUsedTokens >= totalSupply) throw;
+      if(totalUsedTokens >= totalAvailableForSale) throw;
 
       if (msg.value == 0) throw;
 
@@ -110,7 +113,7 @@ contract PillarToken is StandardToken, Ownable {
 
       uint numTokens = msg.value.div(tokenPrice);
       totalUsedTokens = totalUsedTokens.add(numTokens);
-      if (totalUsedTokens > totalSupply) throw;
+      if (totalUsedTokens > totalAvailableForSale) throw;
 
       balances[msg.sender] = balances[msg.sender].add(numTokens);
 
@@ -124,18 +127,18 @@ contract PillarToken is StandardToken, Ownable {
 
     //@notice Function that reports whether funding is active.
     function fundingActive() constant isFundable external returns (bool){
-      if(block.number < fundingStartBlock || block.number > fundingStopBlock || totalUsedTokens > totalSupply){
+      if(block.number < fundingStartBlock || block.number > fundingStopBlock || totalUsedTokens > totalAvailableForSale){
         return false;
       }
       return true;
     }
 
     //@notice Function reports the number of tokens available for sale
-    function numberOfTokensLeft() constant external returns (uint256) {
+    function numberOfTokensLeft() constant returns (uint256) {
       if (block.number > fundingStopBlock) {
         return 0;
       }
-      uint tokensAvailableForSale = totalSupply - totalUsedTokens;
+      uint tokensAvailableForSale = totalAvailableForSale - totalUsedTokens;
       return tokensAvailableForSale;
     }
 
@@ -145,7 +148,7 @@ contract PillarToken is StandardToken, Ownable {
     function finalize() isFundable onlyOwner external {
       if ((block.number <= fundingStopBlock ||
         totalUsedTokens < minTokensForSale) &&
-        totalUsedTokens < totalSupply) throw;
+        totalUsedTokens < totalAvailableForSale) throw;
 
         // switch funding mode off
         fundingMode = false;
@@ -153,9 +156,10 @@ contract PillarToken is StandardToken, Ownable {
         teamAllocation = new TeamAllocation();
 
         balances[address(teamAllocation)] = teamAllocationTokens;
+        //allocate unsold tokens to iced storage
+        balances[address(futureSale)] = numberOfTokensLeft();
         //transfer any balance available to Pillar Multisig Wallet
         if (!pillarTokenFactory.send(this.balance)) throw;
-
     }
 
     //@notice Function that can be called by purchasers to refund
@@ -186,10 +190,6 @@ contract PillarToken is StandardToken, Ownable {
     //@notice Can be called only when funding is not active and only by the owner
     function allocateTokens(address _to,uint _tokens) isNotFundable onlyOwner external {
       if (!fundingMode) throw;
-
-      if ((block.number <= fundingStopBlock ||
-        totalUsedTokens < minTokensForSale) &&
-        totalUsedTokens < totalSupply) throw;
 
       totalUsedTokens = totalUsedTokens.sub(_tokens);
       balances[_to] = balances[_to].add(_tokens);

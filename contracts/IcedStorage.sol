@@ -1,9 +1,9 @@
 pragma solidity ^0.4.11;
 
-import './PillarTokenFactory.sol';
+import './TestWallet.sol';
 import './zeppelin/SafeMath.sol';
 
-contract IcedStorage is PillarTokenFactory {
+contract IcedStorage is TestWallet {
   using SafeMath for uint;
 
   uint lockPeriod;
