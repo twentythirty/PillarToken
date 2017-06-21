@@ -4,7 +4,7 @@ import './zeppelin/SafeMath.sol';
 import './zeppelin/ownership/Ownable.sol';
 import './zeppelin/lifecycle/Pausable.sol';
 import './PillarToken.sol';
-import './UnsoldAllocation.sol'
+import './UnsoldAllocation.sol';
 
 contract PillarPresale is Pausable {
   using SafeMath for uint;

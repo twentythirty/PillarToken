@@ -163,7 +163,7 @@ contract PillarToken is StandardToken, Ownable {
         //allocate unsold tokens to iced storage
         uint totalUnSold = numberOfTokensLeft();
         unsoldTokens = new UnsoldAllocation(10,futureSale,totalUnSold);
-        balances[addres(unsoldTokens)] = totalUnSold;
+        balances[address(unsoldTokens)] = totalUnSold;
         //transfer any balance available to Pillar Multisig Wallet
         if (!pillarTokenFactory.send(this.balance)) throw;
     }
