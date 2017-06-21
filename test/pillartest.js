@@ -3,7 +3,7 @@ var PillarToken = artifacts.require("./PillarToken.sol");
 var expect = require("chai").expect;
 var pillar;
 contract('PillarToken', function(accounts) {
-  /*
+
   it("test for totalSupply", async function() {
     pillar = await PillarToken.deployed();
     const expected = 800000000;
@@ -18,7 +18,7 @@ contract('PillarToken', function(accounts) {
   });
 
   it("test for purchase", async function() {
-    var expected = 350000;
+    var expected = 1000;
     try {
       await pillar.purchase({from: accounts[0], value: web3.toWei(1,'ether')});
       const balance = await pillar.balanceOf.call(accounts[0]);
@@ -29,7 +29,7 @@ contract('PillarToken', function(accounts) {
   });
 
   it("test for fallback function", async function() {
-    var expected = 175000;
+    var expected = 500;
     try {
       await web3.eth.sendTransaction({from: accounts[1],to: pillar.address, value: web3.toWei(0.5,'ether')});
       const balance = await pillar.balanceOf.call(accounts[1]);
@@ -40,16 +40,16 @@ contract('PillarToken', function(accounts) {
   });
 
   it("test for numberOfTokensLeft", async function() {
-    var expected = 559475000;
+    var expected = 559998500;
     const tokens = await pillar.numberOfTokensLeft.call();
     expect(parseInt(tokens.valueOf())).to.equal(expected)
   });
 
   it("test for balanceOf", async function() {
-    var expected1 = 350000;
+    var expected1 = 1000;
     const balance1 = await pillar.balanceOf.call(accounts[0]);
     expect(parseInt(balance1.valueOf())).to.equal(expected1);
-    var expected2 = 175000;
+    var expected2 = 500;
     const balance2 = await pillar.balanceOf.call(accounts[1]);
     expect(parseInt(balance2.valueOf())).to.equal(expected2);
     var expected3 = 0;
@@ -62,7 +62,7 @@ contract('PillarToken', function(accounts) {
     var expected1 = 100;
     const balance1 = await pillar.balanceOf.call(accounts[2]);
     expect(parseInt(balance1)).to.equal(expected1);
-    var expected2 = 349900;
+    var expected2 = 900;
     const balance2 = await pillar.balanceOf.call(accounts[0]);
     expect(parseInt(balance2)).to.equal(expected2);
   });
@@ -84,5 +84,5 @@ contract('PillarToken', function(accounts) {
       expect(e).not.to.equal('');
     }
   });
-  */
+
 });

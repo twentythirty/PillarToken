@@ -225,8 +225,27 @@
       "links": {},
       "address": "0x512760907a0889cef8c8f483b75abda6ee537230",
       "updated_at": 1497986340118
+    },
+    "1498017863890": {
+      "events": {
+        "0x6985a02210a168e66602d3235cb6db0e70f92b3ba4d376a33c0f3d9434bff625": {
+          "anonymous": false,
+          "inputs": [],
+          "name": "Pause",
+          "type": "event"
+        },
+        "0x7805862f689e2f13df9f062ff482ad3ad112aca9e0847911ed832e158c525b33": {
+          "anonymous": false,
+          "inputs": [],
+          "name": "Unpause",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0x2bbeec357d3ba17b5bb5ccaac1700df47ef283c8",
+      "updated_at": 1498017949019
     }
   },
   "schema_version": "0.0.5",
-  "updated_at": 1497986340118
+  "updated_at": 1498017949019
 }
