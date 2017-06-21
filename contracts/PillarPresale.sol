@@ -8,7 +8,8 @@ import './UnsoldAllocation.sol';
 
 contract PillarPresale is Pausable {
   using SafeMath for uint;
-  uint public totalSupply = 16000000;
+  uint public totalSupply;
+
   address pillarTokenFactory;
   uint totalUsedTokens;
   mapping(address => uint) balances;
@@ -39,6 +40,7 @@ contract PillarPresale is Pausable {
     startBlock = _startBlock;
     endBlock = _endBlock;
     pillarTokenFactory = _pillarTokenFactory;
+    totalSupply = 16000000;
     totalUsedTokens = 0;
   }
 

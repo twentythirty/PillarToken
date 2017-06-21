@@ -1,5 +1,6 @@
-
+var SafeMath = artifacts.require('./zeppelin/SafeMath.sol');
 var PillarPresale = artifacts.require('./PillarPresale.sol');
+var UnsoldAllocation = artifacts.require('./UnsoldAllocation.sol');
 var TeamAllocation = artifacts.require("./TeamAllocation.sol");
 var PillarToken = artifacts.require("./PillarToken.sol");
 const presaleStartBlock = 0;
@@ -16,7 +17,12 @@ const threeYearIcedStorage = '0x7d0f8ccea9413fd88c8e882bab5c39405fbeaefe';
 const tenYearIcedStorage = '0x4af80735a22eb782be064a5054321d2841b0f5b7';
 */
 module.exports = function(deployer) {
-
+  deployer.deploy(SafeMath);
+  deployer.link(SafeMath,UnsoldAllocation);
+  deployer.link(SafeMath,PillarPresale);
+  deployer.link(SafeMath,TeamAllocation);
+  deployer.link(SafeMath,PillarToken);
+  deployer.deploy(UnsoldAllocation,10,multiSigWallet,100);
   deployer.deploy(PillarPresale,presaleStartBlock,presaleEndBlock,multiSigWallet);
   deployer.deploy(TeamAllocation);
   deployer.deploy(PillarToken,multiSigWallet,icoStartBlock,icoEndBlock,tenYearIcedStorage);
