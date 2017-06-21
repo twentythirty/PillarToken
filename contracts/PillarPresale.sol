@@ -4,6 +4,7 @@ import './zeppelin/SafeMath.sol';
 import './zeppelin/ownership/Ownable.sol';
 import './zeppelin/lifecycle/Pausable.sol';
 import './PillarToken.sol';
+import './UnsoldAllocation.sol'
 
 contract PillarPresale is Pausable {
   using SafeMath for uint;
@@ -25,6 +26,7 @@ contract PillarPresale is Pausable {
   uint constant PRESALE_PRICE = 1 finney;
 
   address public plWallet;
+  UnsoldAllocation unsoldPresale;
 
   modifier isFundable() {
       if (!fundingMode) throw;
@@ -71,6 +73,7 @@ contract PillarPresale is Pausable {
 
     if(plWallet == address(0)) throw;
 
+    unsoldPresale = new UnsoldAllocation(3,plWallet,numberOfTokensLeft());
     //migrate the ether to the pillarTokenFactory wallet
     if(!pillarTokenFactory.send(this.balance)) throw;
 

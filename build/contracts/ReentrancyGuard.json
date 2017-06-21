@@ -1,8 +1,0 @@
-{
-  "contract_name": "ReentrancyGuard",
-  "abi": [],
-  "unlinked_binary": "0x60606040526000805460ff191690553415601557fe5b5b60338060236000396000f30060606040525bfe00a165627a7a7230582066a62b713af300f6535cb13da5b67bf380c83399e04e4af7cef7884b806cb5a60029",
-  "networks": {},
-  "schema_version": "0.0.5",
-  "updated_at": 1497984209590
-}

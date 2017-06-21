@@ -1,6 +1,7 @@
 pragma solidity ^0.4.11;
 
 import './TeamAllocation.sol';
+import './UnsoldAllocation.sol';
 import './zeppelin/SafeMath.sol';
 import './zeppelin/token/StandardToken.sol';
 import './zeppelin/ownership/Ownable.sol';
@@ -14,8 +15,8 @@ contract PillarToken is StandardToken, Ownable {
     string public constant symbol = "PLR";
     uint public constant decimals = 18;
 
-    address public futureSale;
     TeamAllocation teamAllocation;
+    UnsoldAllocation unsoldTokens;
 
     uint constant public minTokensForSale = 3000000;
     uint constant public totalAllocationTokens = 24000000;
@@ -28,6 +29,8 @@ contract PillarToken is StandardToken, Ownable {
 
     // Multisigwallet where the proceeds will be stored.
     address public pillarTokenFactory;
+    // Multisigwallet to unsold tokens
+    address public futureSale;
 
     // Sale Period
     uint public salePeriod;
@@ -149,6 +152,8 @@ contract PillarToken is StandardToken, Ownable {
         totalUsedTokens < minTokensForSale) &&
         totalUsedTokens < totalAvailableForSale) throw;
 
+      if(futureSale == address(0)) throw;
+
         // switch funding mode off
         fundingMode = false;
 
@@ -156,7 +161,9 @@ contract PillarToken is StandardToken, Ownable {
 
         balances[address(teamAllocation)] = teamAllocationTokens;
         //allocate unsold tokens to iced storage
-        balances[futureSale] = numberOfTokensLeft();
+        uint totalUnSold = numberOfTokensLeft();
+        unsoldTokens = new UnsoldAllocation(10,futureSale,totalUnSold);
+        balances[addres(unsoldTokens)] = totalUnSold;
         //transfer any balance available to Pillar Multisig Wallet
         if (!pillarTokenFactory.send(this.balance)) throw;
     }
