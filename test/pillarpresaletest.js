@@ -3,12 +3,15 @@ var PillarPresale = artifacts.require("./PillarPresale.sol");
 var expect = require("chai").expect;
 var pillar;
 contract('PillarPresale', function(accounts) {
-
-  it("test for totalSupply", async function() {
-    pillar = await PillarPresale.deployed();
-    const expected = 16000000;
-    const total = await pillar.totalSupply.call();
-    expect(parseInt(total.valueOf())).to.equal(expected);
+  it("test for presaleSupply", async function() {
+    try {
+      const expected = 16000000;
+      pillar = await PillarPresale.deployed();
+      const total = await pillar.getPresaleSupply.call();
+      expect(parseInt(total.valueOf())).to.equal(expected);
+    }catch(e) {
+      //catch error
+    }
   });
 
   it("test for fallback function", async function() {
@@ -21,7 +24,7 @@ contract('PillarPresale', function(accounts) {
       console.log(balance);
       //expect(parseInt(balance.valueOf())).to.equal(expected);
     }catch(e) {
-      console.log(e);
+      //console.log(e);
     }
   });
 

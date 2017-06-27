@@ -3,18 +3,31 @@ var PillarPresale = artifacts.require('./PillarPresale.sol');
 var UnsoldAllocation = artifacts.require('./UnsoldAllocation.sol');
 var TeamAllocation = artifacts.require("./TeamAllocation.sol");
 var PillarToken = artifacts.require("./PillarToken.sol");
+/*
+//for testrpc
 const presaleStartBlock = 0;
 const presaleEndBlock = 1000;
 const icoStartBlock = 0;
 const icoEndBlock = 10000000;
-
-const multiSigWallet = '0x5c83618afc51c8d51a7957cf3d36b25489b6aa57'
-const threeYearIcedStorage = '0xe36f85190ba15e683701cabd483b011e141fe37e';
-const tenYearIcedStorage = '0x2862f287c344ddf1ab4d6540874733901ccd9662';
+//for kovan
+const presaleStartBlock = 2229066;
+const presaleEndBlock = 2249066;
+const icoStartBlock = 2250000;
+const icoEndBlock = 2290000;
+*/
+//for ropsten
+const presaleStartBlock = 1200000;
+const presaleEndBlock = 1205000;
+const icoStartBlock = 1205001;
+const icoEndBlock = 1300000;
+//
+const multiSigWallet = '0x9291350ac679657c97c8f059077fd5574ac7ecc6'; //gnosis
+const threeYearIcedStorage = '0x50402a9c6b7561346421de274d8526f9216e3899'; //gnosis
+const tenYearIcedStorage = '0x50402a9c6b7561346421de274d8526f9216e3899'; //gnosis
 /*
-const multiSigWallet = '0xa0c82828a7d8e54ec699347690d9eedfe428027b'
-const threeYearIcedStorage = '0x7d0f8ccea9413fd88c8e882bab5c39405fbeaefe';
-const tenYearIcedStorage = '0x4af80735a22eb782be064a5054321d2841b0f5b7';
+const multiSigWallet = '0xa52120b2465eb332e8820a1326bc158258a629c4'
+const threeYearIcedStorage = '0x5c28f2b9ca03302b18696ab27c641bbea75d73f1';
+const tenYearIcedStorage = '0x5c28f2b9ca03302b18696ab27c641bbea75d73f1';
 */
 module.exports = function(deployer) {
   deployer.deploy(SafeMath);
@@ -26,5 +39,4 @@ module.exports = function(deployer) {
   deployer.deploy(PillarPresale,presaleStartBlock,presaleEndBlock,multiSigWallet);
   deployer.deploy(TeamAllocation);
   deployer.deploy(PillarToken,multiSigWallet,icoStartBlock,icoEndBlock,tenYearIcedStorage);
-
 };

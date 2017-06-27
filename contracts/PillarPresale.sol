@@ -8,7 +8,7 @@ import './UnsoldAllocation.sol';
 
 contract PillarPresale is Pausable {
   using SafeMath for uint;
-  uint public totalSupply;
+  uint constant presaleSupply = 16000000;
 
   address pillarTokenFactory;
   uint totalUsedTokens;
@@ -26,7 +26,7 @@ contract PillarPresale is Pausable {
   //price will be in finney
   uint constant PRESALE_PRICE = 1 finney;
 
-  address public plWallet;
+  address icingWallet;
   UnsoldAllocation unsoldPresale;
 
   modifier isFundable() {
@@ -40,7 +40,6 @@ contract PillarPresale is Pausable {
     startBlock = _startBlock;
     endBlock = _endBlock;
     pillarTokenFactory = _pillarTokenFactory;
-    totalSupply = 16000000;
     totalUsedTokens = 0;
   }
 
@@ -48,12 +47,12 @@ contract PillarPresale is Pausable {
     if(now > salePeriod) throw;
     if(block.number < startBlock) throw;
     if(block.number > endBlock) throw;
-    if(totalUsedTokens >= totalSupply) throw;
+    if(totalUsedTokens >= presaleSupply) throw;
     if(msg.value == 0) throw;
 
     uint numTokens = msg.value.div(PRESALE_PRICE);
     totalUsedTokens = totalUsedTokens.add(numTokens);
-    if (totalUsedTokens > totalSupply) throw;
+    if (totalUsedTokens > presaleSupply) throw;
 
     //transfer money to PillarTokenFactory MultisigWallet
     if(!pillarTokenFactory.send(msg.value)) throw;
@@ -62,9 +61,13 @@ contract PillarPresale is Pausable {
     balances[msg.sender] = balances[msg.sender].add(numTokens);
   }
 
+  function getPresaleSupply() external constant returns (uint256) {
+    return presaleSupply;
+  }
+
   //@notice Function reports the number of tokens available for sale
   function numberOfTokensLeft() constant returns (uint256) {
-    uint tokensAvailableForSale = totalSupply.sub(totalUsedTokens);
+    uint tokensAvailableForSale = presaleSupply.sub(totalUsedTokens);
     return tokensAvailableForSale;
   }
 
@@ -73,9 +76,9 @@ contract PillarPresale is Pausable {
 
     if((block.number <= startBlock || block.number >= endBlock)) throw;
 
-    if(plWallet == address(0)) throw;
+    if(icingWallet == address(0)) throw;
 
-    unsoldPresale = new UnsoldAllocation(3,plWallet,numberOfTokensLeft());
+    unsoldPresale = new UnsoldAllocation(3,icingWallet,numberOfTokensLeft());
     //migrate the ether to the pillarTokenFactory wallet
     if(!pillarTokenFactory.send(this.balance)) throw;
 
@@ -91,5 +94,9 @@ contract PillarPresale is Pausable {
 
   function numOfPurchasers() external returns (uint) {
     return purchasers.length;
+  }
+
+  function setIcingWallet(address _icingWalletAddress) external {
+    icingWallet = _icingWalletAddress;
   }
 }
