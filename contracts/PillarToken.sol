@@ -86,7 +86,7 @@ contract PillarToken is StandardToken, Ownable {
       if(block.number > fundingStopBlock) throw;
       if(totalUsedTokens >= totalSupply) throw;
 
-      if (msg.value == 0) throw;
+      if (msg.value < tokenPrice) throw;
 
       //transfer money to PillarTokenFactory MultisigWallet
       if(!pillarTokenFactory.send(msg.value)) throw;
@@ -108,7 +108,7 @@ contract PillarToken is StandardToken, Ownable {
       if(block.number > fundingStopBlock) throw;
       if(totalUsedTokens >= totalAvailableForSale) throw;
 
-      if (msg.value == 0) throw;
+      if (msg.value < tokenPrice) throw;
 
       //transfer money to PillarTokenFactory MultisigWallet
       if(!pillarTokenFactory.send(msg.value)) throw;

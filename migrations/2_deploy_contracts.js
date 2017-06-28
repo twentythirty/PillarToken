@@ -9,17 +9,25 @@ const presaleStartBlock = 0;
 const presaleEndBlock = 1000;
 const icoStartBlock = 0;
 const icoEndBlock = 10000000;
-//for kovan
-const presaleStartBlock = 2229066;
-const presaleEndBlock = 2249066;
-const icoStartBlock = 2250000;
-const icoEndBlock = 2290000;
 */
+//for rinkeby
+const presaleStartBlock = 442803;
+const presaleEndBlock = 442905;
+const icoStartBlock = 442906;
+const icoEndBlock = 600000;
+/*
+//for kovan
+const presaleStartBlock = 2323400;
+const presaleEndBlock = 2340000;
+const icoStartBlock = 2340001;
+const icoEndBlock = 2360000;
+
 //for ropsten
 const presaleStartBlock = 1200000;
 const presaleEndBlock = 1205000;
 const icoStartBlock = 1205001;
 const icoEndBlock = 1300000;
+*/
 //
 const multiSigWallet = '0x9291350ac679657c97c8f059077fd5574ac7ecc6'; //gnosis
 const threeYearIcedStorage = '0x50402a9c6b7561346421de274d8526f9216e3899'; //gnosis
