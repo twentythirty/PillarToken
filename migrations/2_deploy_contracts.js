@@ -11,9 +11,9 @@ const icoStartBlock = 0;
 const icoEndBlock = 10000000;
 */
 //for rinkeby
-const presaleStartBlock = 442803;
-const presaleEndBlock = 442905;
-const icoStartBlock = 442906;
+const presaleStartBlock = 448440;
+const presaleEndBlock = 449440;
+const icoStartBlock = 449441;
 const icoEndBlock = 600000;
 /*
 //for kovan
