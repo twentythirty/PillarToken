@@ -29,6 +29,7 @@ const icoStartBlock = 1205001;
 const icoEndBlock = 1300000;
 */
 //
+//const multiSigWallet = '0xa4ba560bAFC35a2B3aD5A380fF162e6Cb95aCe6F' //local
 const multiSigWallet = '0x9291350ac679657c97c8f059077fd5574ac7ecc6'; //gnosis
 const threeYearIcedStorage = '0x50402a9c6b7561346421de274d8526f9216e3899'; //gnosis
 const tenYearIcedStorage = '0x50402a9c6b7561346421de274d8526f9216e3899'; //gnosis
@@ -44,7 +45,7 @@ module.exports = function(deployer) {
   deployer.link(SafeMath,TeamAllocation);
   deployer.link(SafeMath,PillarToken);
   deployer.deploy(UnsoldAllocation,10,multiSigWallet,100);
-  deployer.deploy(PillarPresale,presaleStartBlock,presaleEndBlock,multiSigWallet);
+  deployer.deploy(PillarPresale,multiSigWallet,presaleStartBlock,presaleEndBlock);
   deployer.deploy(TeamAllocation);
   deployer.deploy(PillarToken,multiSigWallet,icoStartBlock,icoEndBlock,tenYearIcedStorage);
 };
