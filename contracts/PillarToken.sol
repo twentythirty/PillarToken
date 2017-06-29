@@ -23,7 +23,7 @@ contract PillarToken is StandardToken, Ownable {
     uint constant public lockedTeamAllocationTokens = 16000000;
     uint constant public unlockedTeamAllocationTokens = 8000000;
     uint constant public totalAvailableForSale = 560000000;
-    address constant public unlockedTeamStorageVault = 0x4162Ad6EEc341e438eAbe85f52a941B078210819;
+    address public unlockedTeamStorageVault = 0x4162Ad6EEc341e438eAbe85f52a941B078210819;
 
     // Funding amount in Finney
     uint public constant tokenPrice  = 1 finney;

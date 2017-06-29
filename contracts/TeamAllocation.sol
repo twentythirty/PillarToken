@@ -9,11 +9,10 @@ contract TeamAllocation is Ownable {
   uint public unlockedAt;
   PillarToken plr;
   mapping (address => uint) allocations;
-  address[] members;
-
   uint tokensCreated = 0;
+  uint constant public lockedTeamAllocationTokens = 16000000;
   //address of the team storage vault
-  address public constant teamStorageVault = 0x45B0852F3fC6fB50e3898f7A38184f66efC53137;
+  address public teamStorageVault = 0x45B0852F3fC6fB50e3898f7A38184f66efC53137;
 
   function TeamAllocation() {
     plr = PillarToken(msg.sender);
@@ -21,11 +20,11 @@ contract TeamAllocation is Ownable {
     uint nineMonths = 9 * 30 days;
     unlockedAt = now.add(nineMonths);
     //2% tokens from the Marketing bucket which are locked for 9 months
-    allocations[teamStorageAddress] = plr.lockedTeamAllocationTokens;
+    allocations[teamStorageVault] = lockedTeamAllocationTokens;
   }
 
-  function getTotalAllocation()returns(uint){
-      return plr.lockedTeamAllocationTokens;
+  function getTotalAllocation() returns (uint){
+      return lockedTeamAllocationTokens;
   }
 
   function unlock() external payable {
