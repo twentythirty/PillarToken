@@ -6,11 +6,10 @@ The pillar ICO is made of three contracts which are ERC20 compliant token built 
 The naming convention used describs the purpose of the individual contracts.
 
 
-1) PillarPreSale - in development
-2) PillarToken - deployed in kovan test net
-3) TeamAllocation - in development
-4) PresaleIcedWallet - in development
-5) PillarFutureSaleWallet - in development
+1) PillarPreSale -
+2) PillarToken - deployed in Rinkeby testnet
+3) TeamAllocation - 
+4) UnsoldAllocation - deployed in Rinkeby testnet
 
 ## Dependencies
 
