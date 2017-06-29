@@ -19,10 +19,11 @@ contract PillarToken is StandardToken, Ownable {
     UnsoldAllocation unsoldTokens;
 
     uint constant public minTokensForSale = 3000000;
-    uint constant public totalAllocationTokens = 24000000;
     uint constant public futureTokens = 120000000;
-    uint constant public teamAllocationTokens = 24000000;
+    uint constant public lockedTeamAllocationTokens = 16000000;
+    uint constant public unlockedTeamAllocationTokens = 8000000;
     uint constant public totalAvailableForSale = 560000000;
+    address constant public unlockedTeamStorageVault = 0x4162Ad6EEc341e438eAbe85f52a941B078210819;
 
     // Funding amount in Finney
     uint public constant tokenPrice  = 1 finney;
@@ -70,6 +71,8 @@ contract PillarToken is StandardToken, Ownable {
       totalUsedTokens = 0;
       totalSupply = 800000000;
       futureSale = _icedWallet;
+      //allot 8 million of the 24 million marketing tokens to an address
+      balances[unlockedTeamStorageVault] = unlockedTeamAllocationTokens;
     }
 
     //@notice Used to pause the contract for firefighting if any.
@@ -157,13 +160,15 @@ contract PillarToken is StandardToken, Ownable {
         // switch funding mode off
         fundingMode = false;
 
+        //Allot team tokens to a smart contract which will frozen for 9 months
         teamAllocation = new TeamAllocation();
+        balances[address(teamAllocation)] = lockedTeamAllocationTokens;
 
-        balances[address(teamAllocation)] = teamAllocationTokens;
         //allocate unsold tokens to iced storage
         uint totalUnSold = numberOfTokensLeft();
         unsoldTokens = new UnsoldAllocation(10,futureSale,totalUnSold);
         balances[address(unsoldTokens)] = totalUnSold;
+
         //transfer any balance available to Pillar Multisig Wallet
         if (!pillarTokenFactory.send(this.balance)) throw;
     }
