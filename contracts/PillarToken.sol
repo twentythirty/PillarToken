@@ -173,7 +173,6 @@ contract PillarToken is StandardToken, Ownable, Pausable {
     function allocateTokens(address _to,uint _tokens) isNotFundable onlyOwner external {
       if (!fundingMode) throw;
 
-      totalUsedTokens = totalUsedTokens.sub(_tokens);
       balances[_to] = balances[_to].add(_tokens);
     }
 }
