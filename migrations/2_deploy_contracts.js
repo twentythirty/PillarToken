@@ -3,13 +3,14 @@ var PillarPresale = artifacts.require('./PillarPresale.sol');
 var UnsoldAllocation = artifacts.require('./UnsoldAllocation.sol');
 var TeamAllocation = artifacts.require("./TeamAllocation.sol");
 var PillarToken = artifacts.require("./PillarToken.sol");
-/*
+//var Token = artifacts.require("./Token.sol");
+
 //for testrpc
 const presaleStartBlock = 0;
 const presaleEndBlock = 1000;
 const icoStartBlock = 0;
 const icoEndBlock = 10000000;
-*/
+/*
 //for rinkeby
 const presaleStartBlock = 448440;
 const presaleEndBlock = 449440;
@@ -40,6 +41,7 @@ const tenYearIcedStorage = '0x5c28f2b9ca03302b18696ab27c641bbea75d73f1';
 */
 module.exports = function(deployer) {
   deployer.deploy(SafeMath);
+  //deployer.deploy(Token,multiSigWallet,icoStartBlock,icoEndBlock,tenYearIcedStorage);
   deployer.link(SafeMath,UnsoldAllocation);
   deployer.link(SafeMath,PillarPresale);
   deployer.link(SafeMath,TeamAllocation);

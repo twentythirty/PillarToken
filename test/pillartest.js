@@ -11,12 +11,6 @@ contract('PillarToken', function(accounts) {
     expect(parseInt(total.valueOf())).to.equal(expected);
   });
 
-  it("test for fundingActive", async function() {
-    const expected = true;
-    const status = await pillar.fundingActive.call();
-    expect(status.valueOf()).to.equal(expected);
-  });
-
   it("test for purchase", async function() {
     var expected = 1000;
     try {

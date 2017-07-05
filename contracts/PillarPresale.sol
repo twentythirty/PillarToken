@@ -51,6 +51,9 @@ contract PillarPresale is Pausable {
     if(msg.value < PRESALE_PRICE) throw;
 
     uint numTokens = msg.value.div(PRESALE_PRICE);
+
+    if(numTokens < 1) throw;
+
     totalUsedTokens = totalUsedTokens.add(numTokens);
     if (totalUsedTokens > presaleSupply) throw;
 

@@ -5,10 +5,11 @@ import './UnsoldAllocation.sol';
 import './zeppelin/SafeMath.sol';
 import './zeppelin/token/StandardToken.sol';
 import './zeppelin/ownership/Ownable.sol';
+import './zeppelin/lifecycle/Pausable.sol';
 
 /// @title PillarToken - Crowdfunding code for the Pillar Project
 /// @author Parthasarathy Ramanujam, Gustavo Guimaraes, Ronak Thacker
-contract PillarToken is StandardToken, Ownable {
+contract PillarToken is StandardToken, Ownable, Pausable {
 
     using SafeMath for uint;
     string public constant name = "PILLAR";
@@ -64,6 +65,10 @@ contract PillarToken is StandardToken, Ownable {
     //@param `_fundingStopBlock` - block from when ICO ends.
     //@param `_icedWallet` - Multisigwallet address to which unsold tokens are assigned
     function PillarToken(address _pillarTokenFactory, uint256 _fundingStartBlock, uint256 _fundingStopBlock, address _icedWallet) {
+      if(_pillarTokenFactory == address(0)) throw;
+      if(_icedWallet == address(0)) throw;
+      if(_fundingStopBlock <= _fundingStartBlock) throw;
+
       salePeriod = now.add(60 hours);
       pillarTokenFactory = _pillarTokenFactory;
       fundingStartBlock = _fundingStartBlock;
@@ -75,37 +80,15 @@ contract PillarToken is StandardToken, Ownable {
       balances[unlockedTeamStorageVault] = unlockedTeamAllocationTokens;
     }
 
-    //@notice Used to pause the contract for firefighting if any.
-    //@notice can be called only when the contract is fundable
-    function pause() onlyOwner isFundable external returns (bool) {
-      fundingMode = false;
-    }
-
     //@notice Fallback function that accepts the ether and allocates tokens to
     //the msg.sender corresponding to msg.value
     function() payable isFundable external {
-      if(now > salePeriod) throw;
-      if(block.number < fundingStartBlock) throw;
-      if(block.number > fundingStopBlock) throw;
-      if(totalUsedTokens >= totalSupply) throw;
-
-      if (msg.value < tokenPrice) throw;
-
-      //transfer money to PillarTokenFactory MultisigWallet
-      if(!pillarTokenFactory.send(msg.value)) throw;
-
-      uint numTokens = msg.value.div(tokenPrice);
-      totalUsedTokens = totalUsedTokens.add(numTokens);
-      if (totalUsedTokens > totalSupply) throw;
-
-      balances[msg.sender] = balances[msg.sender].add(numTokens);
-
-      Transfer(0, msg.sender, numTokens);
+      purchase();
     }
 
     //@notice function that accepts the ether and allocates tokens to
     //the msg.sender corresponding to msg.value
-    function purchase() payable isFundable external {
+    function purchase() payable isFundable {
       if(now > salePeriod) throw;
       if(block.number < fundingStartBlock) throw;
       if(block.number > fundingStopBlock) throw;
@@ -113,10 +96,11 @@ contract PillarToken is StandardToken, Ownable {
 
       if (msg.value < tokenPrice) throw;
 
-      //transfer money to PillarTokenFactory MultisigWallet
-      if(!pillarTokenFactory.send(msg.value)) throw;
-
       uint numTokens = msg.value.div(tokenPrice);
+      if(numTokens < 1) throw;
+      //transfer money to PillarTokenFactory MultisigWallet
+      pillarTokenFactory.transfer(msg.value);
+
       totalUsedTokens = totalUsedTokens.add(numTokens);
       if (totalUsedTokens > totalAvailableForSale) throw;
 
@@ -130,20 +114,9 @@ contract PillarToken is StandardToken, Ownable {
       return salePeriod;
     }
 
-    //@notice Function that reports whether funding is active.
-    function fundingActive() constant isFundable external returns (bool){
-      if(block.number < fundingStartBlock || block.number > fundingStopBlock || totalUsedTokens > totalAvailableForSale){
-        return false;
-      }
-      return true;
-    }
-
     //@notice Function reports the number of tokens available for sale
     function numberOfTokensLeft() constant returns (uint256) {
-      if (block.number > fundingStopBlock) {
-        return 0;
-      }
-      uint tokensAvailableForSale = totalAvailableForSale - totalUsedTokens;
+      uint tokensAvailableForSale = totalAvailableForSale.sub(totalUsedTokens);
       return tokensAvailableForSale;
     }
 
@@ -151,9 +124,7 @@ contract PillarToken is StandardToken, Ownable {
     //@notice send any remaining balance to the MultisigWallet
     //@notice unsold tokens will be sent to icedwallet
     function finalize() isFundable onlyOwner external {
-      if ((block.number <= fundingStopBlock ||
-        totalUsedTokens < minTokensForSale) &&
-        totalUsedTokens < totalAvailableForSale) throw;
+      if (block.number <= fundingStopBlock || totalUsedTokens < minTokensForSale) throw;
 
       if(futureSale == address(0)) throw;
 
@@ -170,7 +141,7 @@ contract PillarToken is StandardToken, Ownable {
         balances[address(unsoldTokens)] = totalUnSold;
 
         //transfer any balance available to Pillar Multisig Wallet
-        if (!pillarTokenFactory.send(this.balance)) throw;
+        pillarTokenFactory.transfer(this.balance);
     }
 
     //@notice Function that can be called by purchasers to refund
@@ -185,13 +156,13 @@ contract PillarToken is StandardToken, Ownable {
       balances[msg.sender] = 0;
 
       uint ethValue = plrValue.mul(tokenPrice);
-      if(!msg.sender.send(ethValue)) throw;
+      msg.sender.transfer(ethValue);
       Refund(msg.sender, ethValue);
     }
 
     //@notice Function used for funding in case of refund.
     //@notice Can be called only by the Owner
-    function allocateForRefund() external onlyOwner {
+    function allocateForRefund() external payable onlyOwner {
       //does nothing just accepts and stores the ether
     }
 
