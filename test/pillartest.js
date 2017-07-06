@@ -1,64 +1,61 @@
 require('babel-polyfill');
+var BigNumber = require('bignumber.js');
 var PillarToken = artifacts.require("./PillarToken.sol");
 var expect = require("chai").expect;
 var pillar;
 contract('PillarToken', function(accounts) {
 
   it("test for totalSupply", async function() {
+    const expected = new BigNumber(8e+26);
     pillar = await PillarToken.deployed();
-    const expected = 800000000;
-    const total = await pillar.totalSupply.call();
-    expect(parseInt(total.valueOf())).to.equal(expected);
+    const total = new BigNumber(await pillar.totalSupply.call());
+    assert(expected.equals(total))
   });
 
   it("test for purchase", async function() {
-    var expected = 1000;
+    var expected = new BigNumber(1e+21);
     try {
       await pillar.purchase({from: accounts[0], value: web3.toWei(1,'ether')});
-      const balance = await pillar.balanceOf.call(accounts[0]);
-      expect(parseInt(balance.valueOf())).to.equal(expected);
+      const balance = new BigNumber(await pillar.balanceOf.call(accounts[0]));
+      //console.log(balance);
+      assert(expected.equals(balance));
     }catch(e) {
-      //console.log(e);
+      console.log(e);
     }
   });
 
   it("test for fallback function", async function() {
-    var expected = 500;
+    var expected = new BigNumber(500000000000000000000);
     try {
       await web3.eth.sendTransaction({from: accounts[1],to: pillar.address, value: web3.toWei(0.5,'ether')});
-      const balance = await pillar.balanceOf.call(accounts[1]);
-      expect(parseInt(balance.valueOf())).to.equal(expected);
+      const balance = new BigNumber(await pillar.balanceOf.call(accounts[1]));
+      //console.log(balance);
+      assert(expected.equals(balance));
     }catch(e) {
-      //console.log(e);
+      console.log(e);
     }
   });
 
   it("test for numberOfTokensLeft", async function() {
-    var expected = 559998500;
-    const tokens = await pillar.numberOfTokensLeft.call();
-    expect(parseInt(tokens.valueOf())).to.equal(expected)
+    var expected = new BigNumber(5.599985e+26);
+    const tokens = new BigNumber(await pillar.numberOfTokensLeft.call());
+    //console.log(tokens);
+    assert(expected.equals(tokens));
   });
 
   it("test for balanceOf", async function() {
-    var expected1 = 1000;
-    const balance1 = await pillar.balanceOf.call(accounts[0]);
-    expect(parseInt(balance1.valueOf())).to.equal(expected1);
-    var expected2 = 500;
-    const balance2 = await pillar.balanceOf.call(accounts[1]);
-    expect(parseInt(balance2.valueOf())).to.equal(expected2);
+    var expected1 = new BigNumber(1e+21);
+    const balance1 = new BigNumber(await pillar.balanceOf.call(accounts[0]));
+    //console.log("Balance1: ",balance1);
+    assert(expected1.equals(balance1));
+    var expected2 = new BigNumber(500000000000000000000);
+    const balance2 = new BigNumber(await pillar.balanceOf.call(accounts[1]));
+    //console.log("Balance2: ",balance2);
+    assert(expected2.equals(balance2));
     var expected3 = 0;
     const balance3 = await pillar.balanceOf.call(accounts[2]);
+    //console.log("Balance3: ",balance3);
     expect(parseInt(balance3.valueOf())).to.equal(expected3);
-  });
-
-  it("test for transfer", async function() {
-    await pillar.transfer(accounts[2],100,{from:accounts[0], gas: 100000});//{from: accounts[0], gas: 1000000});
-    var expected1 = 100;
-    const balance1 = await pillar.balanceOf.call(accounts[2]);
-    expect(parseInt(balance1)).to.equal(expected1);
-    var expected2 = 900;
-    const balance2 = await pillar.balanceOf.call(accounts[0]);
-    expect(parseInt(balance2)).to.equal(expected2);
   });
 
   it("test for refund failure", async function() {

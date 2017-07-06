@@ -9,7 +9,7 @@ import './zeppelin/lifecycle/Pausable.sol';
 
 /// @title PillarToken - Crowdfunding code for the Pillar Project
 /// @author Parthasarathy Ramanujam, Gustavo Guimaraes, Ronak Thacker
-contract PillarToken is StandardToken, Ownable, Pausable {
+contract PillarToken is StandardToken, Ownable {
 
     using SafeMath for uint;
     string public constant name = "PILLAR";
@@ -19,11 +19,11 @@ contract PillarToken is StandardToken, Ownable, Pausable {
     TeamAllocation teamAllocation;
     UnsoldAllocation unsoldTokens;
 
-    uint constant public minTokensForSale = 3000000;
-    uint constant public futureTokens = 120000000;
-    uint constant public lockedTeamAllocationTokens = 16000000;
-    uint constant public unlockedTeamAllocationTokens = 8000000;
-    uint constant public totalAvailableForSale = 560000000;
+    uint constant public minTokensForSale = 3000000 * 10**18;
+    uint constant public futureTokens = 120000000 * 10**18;
+    uint constant public lockedTeamAllocationTokens = 16000000 * 10**18;
+    uint constant public unlockedTeamAllocationTokens = 8000000 * 10**18;
+    uint constant public totalAvailableForSale = 560000000 * 10**18;
     address public unlockedTeamStorageVault = 0x4162Ad6EEc341e438eAbe85f52a941B078210819;
 
     // Funding amount in Finney
@@ -41,7 +41,7 @@ contract PillarToken is StandardToken, Ownable, Pausable {
     uint fundingStopBlock;
 
     // flags whether ICO is afoot.
-    bool fundingMode = true;
+    bool fundingMode;
 
     //total used tokens
     uint totalUsedTokens;
@@ -74,10 +74,11 @@ contract PillarToken is StandardToken, Ownable, Pausable {
       fundingStartBlock = _fundingStartBlock;
       fundingStopBlock = _fundingStopBlock;
       totalUsedTokens = 0;
-      totalSupply = 800000000;
+      totalSupply = 800000000 * 10**18;
       futureSale = _icedWallet;
       //allot 8 million of the 24 million marketing tokens to an address
       balances[unlockedTeamStorageVault] = unlockedTeamAllocationTokens;
+      fundingMode = true;
     }
 
     //@notice Fallback function that accepts the ether and allocates tokens to
@@ -101,12 +102,13 @@ contract PillarToken is StandardToken, Ownable, Pausable {
       //transfer money to PillarTokenFactory MultisigWallet
       pillarTokenFactory.transfer(msg.value);
 
-      totalUsedTokens = totalUsedTokens.add(numTokens);
+      uint tokens = numTokens * 10**18;
+      totalUsedTokens = totalUsedTokens.add(tokens);
       if (totalUsedTokens > totalAvailableForSale) throw;
 
-      balances[msg.sender] = balances[msg.sender].add(numTokens);
+      balances[msg.sender] = balances[msg.sender].add(tokens);
 
-      Transfer(0, msg.sender, numTokens);
+      Transfer(0, msg.sender, tokens);
     }
 
     //@notice Function that reports how long the sale is active
@@ -124,7 +126,7 @@ contract PillarToken is StandardToken, Ownable, Pausable {
     //@notice send any remaining balance to the MultisigWallet
     //@notice unsold tokens will be sent to icedwallet
     function finalize() isFundable onlyOwner external {
-      if (block.number <= fundingStopBlock || totalUsedTokens < minTokensForSale) throw;
+      if ((block.number <= fundingStopBlock && totalUsedTokens < minTokensForSale)) throw;
 
       if(futureSale == address(0)) throw;
 
@@ -145,7 +147,7 @@ contract PillarToken is StandardToken, Ownable, Pausable {
     }
 
     //@notice Function that can be called by purchasers to refund
-    //@notice Used only in case the function isn't successful.
+    //@notice Used only in case the ICO isn't successful.
     function refund() isFundable external {
       if(block.number <= fundingStopBlock) throw;
       if(totalUsedTokens >= minTokensForSale) throw;
@@ -172,7 +174,24 @@ contract PillarToken is StandardToken, Ownable, Pausable {
     //@notice Can be called only when funding is not active and only by the owner
     function allocateTokens(address _to,uint _tokens) isNotFundable onlyOwner external {
       if (!fundingMode) throw;
+      uint numOfTokens = _tokens * 10**18;
+      balances[_to] = balances[_to].add(numOfTokens);
+    }
 
-      balances[_to] = balances[_to].add(_tokens);
+    //@notice Function to pause the contract.
+    //@notice Can be called only when funding is active and only by the owner
+    function pause() onlyOwner isFundable external {
+      fundingMode = false;
+    }
+
+    //@notice Function to unpause the contract.
+    //@notice Can be called only when funding is not active and only by the owner
+    function unPause() onlyOwner isNotFundable external {
+      fundingMode = true;
+    }
+
+    //@notice Function to get the current funding status.
+    function fundingStatus() external returns (bool){
+      return fundingMode;
     }
 }
