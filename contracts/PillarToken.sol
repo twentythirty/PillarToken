@@ -191,14 +191,14 @@ contract PillarToken is StandardToken, Ownable {
 
     //@notice Function to pause the contract.
     //@notice Can be called only when funding is active and only by the owner
-    function stop() onlyOwner isFundable payable external returns (bool){
+    function pauseTokenSale() onlyOwner isFundable payable external returns (bool){
       fundingMode = false;
       return !fundingMode;
     }
 
     //@notice Function to start the contract.
     //@notice Can be called only when funding is not active and only by the owner
-    function start() onlyOwner isNotFundable payable external returns (bool){
+    function startTokenSale() onlyOwner isNotFundable payable external returns (bool){
       fundingMode = true;
       return fundingMode;
     }
