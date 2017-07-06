@@ -108,6 +108,7 @@ contract PillarToken is StandardToken, Ownable {
 
       balances[msg.sender] = balances[msg.sender].add(tokens);
 
+      //fire the event notifying the transfer of tokens
       Transfer(0, msg.sender, tokens);
     }
 
