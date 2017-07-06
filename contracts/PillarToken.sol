@@ -19,12 +19,15 @@ contract PillarToken is StandardToken, Ownable {
     TeamAllocation teamAllocation;
     UnsoldAllocation unsoldTokens;
 
-    uint constant public minTokensForSale = 3000000 * 10**18;
-    uint constant public futureTokens = 120000000 * 10**18;
-    uint constant public lockedTeamAllocationTokens = 16000000 * 10**18;
-    uint constant public unlockedTeamAllocationTokens = 8000000 * 10**18;
-    uint constant public totalAvailableForSale = 560000000 * 10**18;
+    uint constant public minTokensForSale = 3000000e18;
+    uint constant public maxPresaleTokens = 16000000e18;
+    uint constant public futureTokens = 120000000e18;
+    uint constant public lockedTeamAllocationTokens = 16000000e18;
+    uint constant public unlockedTeamAllocationTokens = 8000000e18;
+    uint constant public totalAvailableForSale = 560000000e18;
     address public unlockedTeamStorageVault = 0x4162Ad6EEc341e438eAbe85f52a941B078210819;
+    uint constant coldStorageYears = 10;
+    uint totalPresale = 0;
 
     // Funding amount in Finney
     uint public constant tokenPrice  = 1 finney;
@@ -48,6 +51,7 @@ contract PillarToken is StandardToken, Ownable {
 
     event Refund(address indexed _from,uint256 _value);
     event Migrate(address indexed _from, address indexed _to, uint256 _value);
+    event MoneyAddedForRefund(address _from, uint256 _value,uint256 _total);
 
     modifier isNotFundable() {
         if (fundingMode) throw;
@@ -74,11 +78,11 @@ contract PillarToken is StandardToken, Ownable {
       fundingStartBlock = _fundingStartBlock;
       fundingStopBlock = _fundingStopBlock;
       totalUsedTokens = 0;
-      totalSupply = 800000000 * 10**18;
+      totalSupply = 800000000e18;
       futureSale = _icedWallet;
       //allot 8 million of the 24 million marketing tokens to an address
       balances[unlockedTeamStorageVault] = unlockedTeamAllocationTokens;
-      fundingMode = true;
+      fundingMode = false;
     }
 
     //@notice Fallback function that accepts the ether and allocates tokens to
@@ -102,7 +106,7 @@ contract PillarToken is StandardToken, Ownable {
       //transfer money to PillarTokenFactory MultisigWallet
       pillarTokenFactory.transfer(msg.value);
 
-      uint tokens = numTokens * 10**18;
+      uint tokens = numTokens.mul(1e18);
       totalUsedTokens = totalUsedTokens.add(tokens);
       if (totalUsedTokens > totalAvailableForSale) throw;
 
@@ -131,20 +135,20 @@ contract PillarToken is StandardToken, Ownable {
 
       if(futureSale == address(0)) throw;
 
-        // switch funding mode off
-        fundingMode = false;
+      // switch funding mode off
+      fundingMode = false;
 
-        //Allot team tokens to a smart contract which will frozen for 9 months
-        teamAllocation = new TeamAllocation();
-        balances[address(teamAllocation)] = lockedTeamAllocationTokens;
+      //Allot team tokens to a smart contract which will frozen for 9 months
+      teamAllocation = new TeamAllocation();
+      balances[address(teamAllocation)] = lockedTeamAllocationTokens;
 
-        //allocate unsold tokens to iced storage
-        uint totalUnSold = numberOfTokensLeft();
-        unsoldTokens = new UnsoldAllocation(10,futureSale,totalUnSold);
-        balances[address(unsoldTokens)] = totalUnSold;
+      //allocate unsold tokens to iced storage
+      uint totalUnSold = numberOfTokensLeft();
+      unsoldTokens = new UnsoldAllocation(coldStorageYears,futureSale,totalUnSold);
+      balances[address(unsoldTokens)] = totalUnSold;
 
-        //transfer any balance available to Pillar Multisig Wallet
-        pillarTokenFactory.transfer(this.balance);
+      //transfer any balance available to Pillar Multisig Wallet
+      pillarTokenFactory.transfer(this.balance);
     }
 
     //@notice Function that can be called by purchasers to refund
@@ -165,8 +169,10 @@ contract PillarToken is StandardToken, Ownable {
 
     //@notice Function used for funding in case of refund.
     //@notice Can be called only by the Owner
-    function allocateForRefund() external payable onlyOwner {
+    function allocateForRefund() external payable onlyOwner returns (uint){
       //does nothing just accepts and stores the ether
+      MoneyAddedForRefund(msg.sender,msg.value,this.balance);
+      return this.balance;
     }
 
     //@notice Function to allocate tokens to an user.
@@ -175,20 +181,26 @@ contract PillarToken is StandardToken, Ownable {
     //@notice Can be called only when funding is not active and only by the owner
     function allocateTokens(address _to,uint _tokens) isNotFundable onlyOwner external {
       if (!fundingMode) throw;
-      uint numOfTokens = _tokens * 10**18;
+      uint numOfTokens = _tokens.mul(1e18);
+      totalPresale = totalPresale.add(numOfTokens);
+
+      if(totalPresale > maxPresaleTokens) throw;
+
       balances[_to] = balances[_to].add(numOfTokens);
     }
 
     //@notice Function to pause the contract.
     //@notice Can be called only when funding is active and only by the owner
-    function pause() onlyOwner isFundable external {
+    function stop() onlyOwner isFundable payable external returns (bool){
       fundingMode = false;
+      return !fundingMode;
     }
 
-    //@notice Function to unpause the contract.
+    //@notice Function to start the contract.
     //@notice Can be called only when funding is not active and only by the owner
-    function unPause() onlyOwner isNotFundable external {
+    function start() onlyOwner isNotFundable payable external returns (bool){
       fundingMode = true;
+      return fundingMode;
     }
 
     //@notice Function to get the current funding status.

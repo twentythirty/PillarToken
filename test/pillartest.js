@@ -5,9 +5,16 @@ var expect = require("chai").expect;
 var pillar;
 contract('PillarToken', function(accounts) {
 
+  it("test for starting ICO", async function() {
+    var expected = true;
+    pillar = await PillarToken.deployed();
+    await pillar.start.call();
+    const status = pillar.fundingStatus.call();
+    expect(status).to.equal(expected);
+  });
+
   it("test for totalSupply", async function() {
     const expected = new BigNumber(8e+26);
-    pillar = await PillarToken.deployed();
     const total = new BigNumber(await pillar.totalSupply.call());
     assert(expected.equals(total))
   });
