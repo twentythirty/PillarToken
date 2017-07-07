@@ -8,7 +8,7 @@ contract('PillarToken', function(accounts) {
   it("test for starting ICO", async function() {
     var expected = true;
     pillar = await PillarToken.deployed();
-    await pillar.start.call();
+    await pillar.startTokenSale({from: accounts[0]});
     const status = pillar.fundingStatus.call();
     expect(status).to.equal(expected);
   });

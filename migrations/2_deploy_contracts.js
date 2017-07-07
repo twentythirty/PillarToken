@@ -4,13 +4,13 @@ var UnsoldAllocation = artifacts.require('./UnsoldAllocation.sol');
 var TeamAllocation = artifacts.require("./TeamAllocation.sol");
 var PillarToken = artifacts.require("./PillarToken.sol");
 //var Token = artifacts.require("./Token.sol");
-/*
+
 //for testrpc
 const presaleStartBlock = 0;
-const presaleEndBlock = 1000;
+const presaleEndBlock = 10;
 const icoStartBlock = 0;
-const icoEndBlock = 10;
-*/
+const icoEndBlock = 10000;
+/*
 //for rinkeby
 const presaleStartBlock = 448440;
 const presaleEndBlock = 449440;
