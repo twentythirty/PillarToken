@@ -3,12 +3,12 @@ pragma solidity ^0.4.11;
 import './zeppelin/SafeMath.sol';
 import './zeppelin/ownership/Ownable.sol';
 import './zeppelin/lifecycle/Pausable.sol';
-import './PillarToken.sol';
-import './UnsoldAllocation.sol';
 
 contract PillarPresale is Pausable {
   using SafeMath for uint;
-  uint constant presaleSupply = 16000000;
+  uint constant totalPresaleSupply = 44000000;
+  uint constant presaleSupply = 40000000;
+  uint constant discountSupply = 4000000;
 
   address pillarTokenFactory;
   uint totalUsedTokens;
@@ -24,19 +24,24 @@ contract PillarPresale is Pausable {
   bool fundingMode = true;
 
   //price will be in finney
-  uint constant PRESALE_PRICE = 1 finney;
-
-  address icingWallet;
-  UnsoldAllocation unsoldPresale;
+  uint constant PRESALE_PRICE = 3.4e14;
 
   modifier isFundable() {
       if (!fundingMode) throw;
       _;
   }
 
+  modifier isNotFundable() {
+      if (!fundingMode) throw;
+      _;
+  }
+
   function PillarPresale(address _pillarTokenFactory,uint _startBlock,uint _endBlock) {
+    if(_pillarTokenFactory == address(0)) throw;
+    if(_endBlock <= _startBlock) throw;
+
     //presale is open for
-    salePeriod = now.add(60 hours);
+    salePeriod = now.add(48 hours);
     startBlock = _startBlock;
     endBlock = _endBlock;
     pillarTokenFactory = _pillarTokenFactory;
@@ -47,43 +52,43 @@ contract PillarPresale is Pausable {
     if(now > salePeriod) throw;
     if(block.number < startBlock) throw;
     if(block.number > endBlock) throw;
-    if(totalUsedTokens >= presaleSupply) throw;
+    if(totalUsedTokens >= totalPresaleSupply) throw;
     if(msg.value < PRESALE_PRICE) throw;
 
     uint numTokens = msg.value.div(PRESALE_PRICE);
-
     if(numTokens < 1) throw;
 
+    //don't allow more than 200000 tokens per user
+    if(numTokens > 200000) throw;
+
+    numTokens = numTokens.add(discountTokens);
+    //1 token discount for every 10 tokens sold
+    uint discountTokens = numTokens.div(10);
+
     totalUsedTokens = totalUsedTokens.add(numTokens);
-    if (totalUsedTokens > presaleSupply) throw;
+    if (totalUsedTokens > totalPresaleSupply) throw;
 
     //transfer money to PillarTokenFactory MultisigWallet
-    if(!pillarTokenFactory.send(msg.value)) throw;
+    pillarTokenFactory.transfer(msg.value);
 
     purchasers.push(msg.sender);
     balances[msg.sender] = balances[msg.sender].add(numTokens);
   }
 
-  function getPresaleSupply() external constant returns (uint256) {
-    return presaleSupply;
+  function getTotalPresaleSupply() external constant returns (uint256) {
+    return totalPresaleSupply;
   }
 
   //@notice Function reports the number of tokens available for sale
   function numberOfTokensLeft() constant returns (uint256) {
-    uint tokensAvailableForSale = presaleSupply.sub(totalUsedTokens);
+    uint tokensAvailableForSale = totalPresaleSupply.sub(totalUsedTokens);
     return tokensAvailableForSale;
   }
 
-  function finalize() external onlyOwner {
-    if(!fundingMode) throw;
+  function finalize() external isFundable onlyOwner {
+    if(block.number < endBlock && totalUsedTokens < presaleSupply) throw;
 
-    if((block.number <= startBlock || block.number >= endBlock)) throw;
-
-    if(icingWallet == address(0)) throw;
-
-    unsoldPresale = new UnsoldAllocation(3,icingWallet,numberOfTokensLeft());
-    //migrate the ether to the pillarTokenFactory wallet
-    if(!pillarTokenFactory.send(this.balance)) throw;
+    pillarTokenFactory.transfer(this.balance);
 
   }
 
@@ -91,15 +96,11 @@ contract PillarPresale is Pausable {
     return balances[owner];
   }
 
-  function getPurchasers() external returns (address[]) {
+  function getPurchasers() onlyOwner isNotFundable external returns (address[]) {
     return purchasers;
   }
 
-  function numOfPurchasers() external returns (uint) {
+  function numOfPurchasers() onlyOwner external returns (uint) {
     return purchasers.length;
-  }
-
-  function setIcingWallet(address _icingWalletAddress) external {
-    icingWallet = _icingWalletAddress;
   }
 }
