@@ -9,7 +9,7 @@ contract('PillarToken', function(accounts) {
     var expected = true;
     pillar = await PillarToken.deployed();
     await pillar.startTokenSale({from: accounts[0]});
-    const status = pillar.fundingStatus.call();
+    const status = await pillar.fundingStatus.call();
     expect(status).to.equal(expected);
   });
 

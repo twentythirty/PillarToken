@@ -20,21 +20,8 @@ contract PillarPresale is Pausable {
   uint startBlock;
   uint endBlock;
 
-  // flags whether ICO is afoot.
-  bool fundingMode = true;
-
   //price will be in finney
-  uint constant PRESALE_PRICE = 3.4e14;
-
-  modifier isFundable() {
-      if (!fundingMode) throw;
-      _;
-  }
-
-  modifier isNotFundable() {
-      if (!fundingMode) throw;
-      _;
-  }
+  uint constant PRESALE_PRICE = 1 finney;
 
   function PillarPresale(address _pillarTokenFactory,uint _startBlock,uint _endBlock) {
     if(_pillarTokenFactory == address(0)) throw;
@@ -48,7 +35,7 @@ contract PillarPresale is Pausable {
     totalUsedTokens = 0;
   }
 
-  function () external isFundable payable {
+  function () external whenNotPaused payable {
     if(now > salePeriod) throw;
     if(block.number < startBlock) throw;
     if(block.number > endBlock) throw;
@@ -61,9 +48,9 @@ contract PillarPresale is Pausable {
     //don't allow more than 200000 tokens per user
     if(numTokens > 200000) throw;
 
-    numTokens = numTokens.add(discountTokens);
     //1 token discount for every 10 tokens sold
     uint discountTokens = numTokens.div(10);
+    numTokens = numTokens.add(discountTokens);
 
     totalUsedTokens = totalUsedTokens.add(numTokens);
     if (totalUsedTokens > totalPresaleSupply) throw;
@@ -85,18 +72,18 @@ contract PillarPresale is Pausable {
     return tokensAvailableForSale;
   }
 
-  function finalize() external isFundable onlyOwner {
+  function finalize() external whenNotPaused onlyOwner {
     if(block.number < endBlock && totalUsedTokens < presaleSupply) throw;
 
     pillarTokenFactory.transfer(this.balance);
-
+    paused = true;
   }
 
   function balanceOf(address owner) returns (uint) {
     return balances[owner];
   }
 
-  function getPurchasers() onlyOwner isNotFundable external returns (address[]) {
+  function getPurchasers() onlyOwner whenPaused external returns (address[]) {
     return purchasers;
   }
 
