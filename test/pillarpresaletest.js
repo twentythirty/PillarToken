@@ -8,18 +8,18 @@ contract('PillarPresale', function(accounts) {
     try {
       const expected = 44000000;
       pillar = await PillarPresale.deployed();
-      const total = await pillar.getTotalPresaleSupply.call();
+      const total = pillar.getTotalPresaleSupply.call();
       expect(parseInt(total.valueOf())).to.equal(expected);
     }catch(e) {
-      //catch error
+      console.log(e);
     }
   });
 
   it("test for fallback function", async function() {
-    var expected = 550;
+    var expected = 2200;
     try {
-      const promise = await web3.eth.sendTransaction({from: accounts[8],to: pillar.address, value: web3.toWei(0.5,'ether'), gas: 2000000});
-      const balance = await pillar.balanceOf.call(accounts[8]);
+      const promise = await web3.eth.sendTransaction({from: accounts[8],to: pillar.address, value: web3.toWei(0.84,'ether'), gas: 2000000});
+      const balance = pillar.balanceOf.call(accounts[8]);
       expect(parseInt(balance.valueOf())).to.equal(expected);
     }catch(e) {
       console.log(e);
@@ -27,15 +27,15 @@ contract('PillarPresale', function(accounts) {
   });
 
   it("test for numberOfTokensLeft", async function() {
-    var expected = 43999450;
-    const tokens = await pillar.numberOfTokensLeft.call();
+    var expected = 43997800;
+    const tokens = pillar.numberOfTokensLeft.call();
     expect(parseInt(tokens.valueOf())).to.equal(expected)
   });
 
   it("test for large sale", async function() {
     try {
-      const promise = await web3.eth.sendTransaction({from: accounts[7],to: pillar.address, value: web3.toWei(100,'ether')});
-      const balance = await pillar.balanceOf.call(accounts[7]);
+      const promise = await web3.eth.sendTransaction({from: accounts[7],to: pillar.address, value: web3.toWei(800,'ether')});
+      const balance = pillar.balanceOf.call(accounts[7]);
     }catch(e) {
       expect(e).not.to.equal('');
     }
