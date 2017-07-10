@@ -30,7 +30,7 @@ contract PillarToken is StandardToken, Ownable {
     uint totalPresale = 0;
 
     // Funding amount in Finney
-    uint public constant tokenPrice  = 1 finney;
+    uint public constant tokenPrice  = 0.00042 ether;
 
     // Multisigwallet where the proceeds will be stored.
     address public pillarTokenFactory;
@@ -65,18 +65,12 @@ contract PillarToken is StandardToken, Ownable {
 
     //@notice  Constructor of PillarToken
     //@param `_pillarTokenFactory` - multisigwallet address to store proceeds.
-    //@param `_fundingStartBlock` - block from when ICO commences
-    //@param `_fundingStopBlock` - block from when ICO ends.
     //@param `_icedWallet` - Multisigwallet address to which unsold tokens are assigned
-    function PillarToken(address _pillarTokenFactory, uint256 _fundingStartBlock, uint256 _fundingStopBlock, address _icedWallet) {
+    function PillarToken(address _pillarTokenFactory, address _icedWallet) {
       if(_pillarTokenFactory == address(0)) throw;
       if(_icedWallet == address(0)) throw;
-      if(_fundingStopBlock <= _fundingStartBlock) throw;
 
-      salePeriod = now.add(60 hours);
       pillarTokenFactory = _pillarTokenFactory;
-      fundingStartBlock = _fundingStartBlock;
-      fundingStopBlock = _fundingStopBlock;
       totalUsedTokens = 0;
       totalSupply = 800000000e18;
       futureSale = _icedWallet;
@@ -131,7 +125,9 @@ contract PillarToken is StandardToken, Ownable {
     //@notice send any remaining balance to the MultisigWallet
     //@notice unsold tokens will be sent to icedwallet
     function finalize() isFundable onlyOwner external {
-      if ((block.number <= fundingStopBlock && totalUsedTokens < minTokensForSale)) throw;
+      if (block.number <= fundingStopBlock) throw;
+
+      if (totalUsedTokens < minTokensForSale) throw;
 
       if(futureSale == address(0)) throw;
 
@@ -196,14 +192,23 @@ contract PillarToken is StandardToken, Ownable {
     }
 
     //@notice Function to start the contract.
+    //@param `_fundingStartBlock` - block from when ICO commences
+    //@param `_fundingStopBlock` - block from when ICO ends.
     //@notice Can be called only when funding is not active and only by the owner
-    function startTokenSale() onlyOwner isNotFundable external returns (bool){
+    function startTokenSale(uint _fundingStartBlock, uint _fundingStopBlock, uint _time) onlyOwner isNotFundable external returns (bool){
+      if(_fundingStopBlock <= _fundingStartBlock) throw;
+      if(_time < 1) throw;
+
+      uint time = _time.mul(1 hours);
+      salePeriod = now.add(time);
+      fundingStartBlock = _fundingStartBlock;
+      fundingStopBlock = _fundingStopBlock;
       fundingMode = true;
       return fundingMode;
     }
 
     //@notice Function to get the current funding status.
-    function fundingStatus() external returns (bool){
+    function fundingStatus() external constant returns (bool){
       return fundingMode;
     }
 }
