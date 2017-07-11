@@ -149,7 +149,7 @@ contract PillarToken is StandardToken, Ownable {
 
       balances[msg.sender] = 0;
 
-      uint ethValue = plrValue.mul(tokenPrice);
+      uint ethValue = plrValue.mul(tokenPrice).div(1e18);
       msg.sender.transfer(ethValue);
       Refund(msg.sender, ethValue);
     }

@@ -4,7 +4,7 @@ var UnsoldAllocation = artifacts.require('./UnsoldAllocation.sol');
 var TeamAllocation = artifacts.require("./TeamAllocation.sol");
 var PillarToken = artifacts.require("./PillarToken.sol");
 //var environment = 'live';
-var environment = 'rinkeby';
+//var environment = 'rinkeby';
 
 module.exports = function(deployer) {
 /*
