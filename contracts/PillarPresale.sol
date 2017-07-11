@@ -22,14 +22,14 @@ contract PillarPresale is Pausable {
 
   //price will be in finney
   //uint constant PRESALE_PRICE = 1 finney;
-  uint constant PRESALE_PRICE = 0.00042 ether;
+  uint constant PRESALE_PRICE = 0.0005 ether;
 
   function PillarPresale(address _pillarTokenFactory,uint _startBlock,uint _endBlock) {
     if(_pillarTokenFactory == address(0)) throw;
     if(_endBlock <= _startBlock) throw;
 
     //presale is open for
-    salePeriod = now.add(48 hours);
+    salePeriod = now.add(50 hours);
     startBlock = _startBlock;
     endBlock = _endBlock;
     pillarTokenFactory = _pillarTokenFactory;
@@ -42,7 +42,7 @@ contract PillarPresale is Pausable {
     if(block.number > endBlock) throw;
     if(totalUsedTokens >= totalPresaleSupply) throw;
     if(msg.value < PRESALE_PRICE) throw;
-    if(msg.value > 500 ether) throw;
+    if(msg.value > 250 ether) throw;
 
     uint numTokens = msg.value.div(PRESALE_PRICE);
     if(numTokens < 1) throw;
@@ -87,5 +87,10 @@ contract PillarPresale is Pausable {
 
   function numOfPurchasers() onlyOwner external constant returns (uint) {
     return purchasers.length;
+  }
+
+  function unpause() onlyOwner whenPaused returns (bool) {
+    salePeriod = now.add(50 hours);
+    super.unpause();
   }
 }
