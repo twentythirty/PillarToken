@@ -8,6 +8,13 @@ module.exports = {
       port: 8545,
       network_id: '*' // Match any network id
     },
+    main: {
+      gas: 4012388,
+      gasPrice: 240000000000,
+      host: 'localhost',
+      port: 8545,
+      network_id: '*' // Match any network id
+    },
     rinkeby: {
       gas: 4012388,
       gasPrice: 240000000000,

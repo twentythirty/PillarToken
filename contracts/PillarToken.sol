@@ -37,9 +37,6 @@ contract PillarToken is StandardToken, Ownable {
     // Multisigwallet to unsold tokens
     address public futureSale;
 
-    // Sale Period
-    uint public salePeriod;
-
     uint fundingStartBlock;
     uint fundingStopBlock;
 
@@ -88,7 +85,6 @@ contract PillarToken is StandardToken, Ownable {
     //@notice function that accepts the ether and allocates tokens to
     //the msg.sender corresponding to msg.value
     function purchase() payable isFundable {
-      if(now > salePeriod) throw;
       if(block.number < fundingStartBlock) throw;
       if(block.number > fundingStopBlock) throw;
       if(totalUsedTokens >= totalAvailableForSale) throw;
@@ -108,11 +104,6 @@ contract PillarToken is StandardToken, Ownable {
 
       //fire the event notifying the transfer of tokens
       Transfer(0, msg.sender, tokens);
-    }
-
-    //@notice Function that reports how long the sale is active
-    function checkSalePeriod() external constant returns (uint) {
-      return salePeriod;
     }
 
     //@notice Function reports the number of tokens available for sale
@@ -195,12 +186,9 @@ contract PillarToken is StandardToken, Ownable {
     //@param `_fundingStartBlock` - block from when ICO commences
     //@param `_fundingStopBlock` - block from when ICO ends.
     //@notice Can be called only when funding is not active and only by the owner
-    function startTokenSale(uint _fundingStartBlock, uint _fundingStopBlock, uint _time) onlyOwner isNotFundable external returns (bool){
+    function startTokenSale(uint _fundingStartBlock, uint _fundingStopBlock) onlyOwner isNotFundable external returns (bool){
       if(_fundingStopBlock <= _fundingStartBlock) throw;
-      if(_time < 1) throw;
 
-      uint time = _time.mul(1 hours);
-      salePeriod = now.add(time);
       fundingStartBlock = _fundingStartBlock;
       fundingStopBlock = _fundingStopBlock;
       fundingMode = true;
