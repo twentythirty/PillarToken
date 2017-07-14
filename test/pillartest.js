@@ -3,12 +3,14 @@ var BigNumber = require('bignumber.js');
 var PillarToken = artifacts.require("./PillarToken.sol");
 var expect = require("chai").expect;
 var pillar;
+const icoStartBlock = 0;
+const icoEndBlock = 10;
 contract('PillarToken', function(accounts) {
 
   it("test for starting ICO", async function() {
     var expected = true;
     pillar = await PillarToken.deployed();
-    await pillar.startTokenSale({from: accounts[0]});
+    await pillar.startTokenSale(icoStartBlock,icoEndBlock,{from: accounts[0]});
     const status = await pillar.fundingStatus.call();
     expect(status).to.equal(expected);
   });
@@ -69,7 +71,7 @@ contract('PillarToken', function(accounts) {
     try {
       await pillar.refund.call();
     }catch(e) {
-      //console.log(e);
+      console.log(e);
       expect(e).not.to.equal('');
     }
   });

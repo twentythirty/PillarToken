@@ -1,4 +1,4 @@
-
+/*
 var PillarToken = artifacts.require("./PillarToken.sol");
 var TeamAllocation = artifacts.require("./TeamAllocation.sol");
 var expect = require("chai").expect;
@@ -13,3 +13,4 @@ contract('TeamAllocation', function(accounts) {
   });
 
 });
+*/

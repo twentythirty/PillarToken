@@ -1,4 +1,4 @@
-
+/*
 require('babel-polyfill');
 var PillarPresale = artifacts.require("./PillarPresale.sol");
 var expect = require("chai").expect;
@@ -50,3 +50,4 @@ contract('PillarPresale', function(accounts) {
     }
   });
 });
+*/

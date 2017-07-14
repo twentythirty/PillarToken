@@ -24,15 +24,9 @@ contract UnsoldAllocation is Ownable {
 
     if(_owner == address(0)) throw;
 
-    if(_tokens <= 0) throw;
-
     plr = PillarToken(msg.sender);
-    if(_lockTime == 3) {
-      unlockedAt = now.add(3 years);
-    }
-    if(_lockTime == 10) {
-      unlockedAt = now.add(10 years);
-    }
+    uint lockTime = _lockTime * 1 years;
+    unlockedAt = now.add(lockTime);
     allocatedTokens = _tokens;
     allocations[_owner] = _tokens;
   }

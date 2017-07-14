@@ -159,6 +159,25 @@ window.App = {
   setStatus: function(message) {
     var status = document.getElementById("status");
     status.innerHTML = message;
+  },
+
+  refund: function() {
+    var pillar = PillarToken.at("0x0c7ac04c92e217cf404b6a105a89ad8730ae06a6");
+    //console.log(pillar);
+    return pillar.refund({from: "0x65a5A157F5097b5820A8f742f4432344f9dC94E7"}).then(function(result){
+      console.log(result);
+    }).catch(function (e) {
+      console.log(e);
+    });
+  },
+
+  allocateForRefund: function() {
+    var pillar = PillarToken.at("0x0c7ac04c92e217cf404b6a105a89ad8730ae06a6");
+    return pillar.allocateForRefund({from: "0xFa30C312999731297236302B1cE272675223EBF8", value: web3.toWei('1.5','ether')}).then(function(result) {
+      console.log(result);
+    }).catch(function(e) {
+      console.log(e);
+    });
   }
 };
 
