@@ -175,9 +175,9 @@ contract PillarToken is StandardToken, Ownable {
       balances[_to] = balances[_to].add(numOfTokens);
     }
 
-    //@notice Function to pause the contract.
+    //@notice Function to unPause the contract.
     //@notice Can be called only when funding is active and only by the owner
-    function ubPauseTokenSale() onlyOwner isFundable external returns (bool){
+    function unPauseTokenSale() onlyOwner isNotFundable external returns (bool){
       fundingMode = true;
       return fundingMode;
     }
