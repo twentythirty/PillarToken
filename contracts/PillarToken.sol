@@ -16,26 +16,36 @@ contract PillarToken is StandardToken, Ownable {
     string public constant symbol = "PLR";
     uint public constant decimals = 18;
 
-    TeamAllocation teamAllocation;
-    UnsoldAllocation unsoldTokens;
+    TeamAllocation public teamAllocation;
+    UnsoldAllocation public unsoldTokens;
+    UnsoldAllocation public twentyThirtyAllocation;
+    UnsoldAllocation public futureSaleAllocation;
 
-    uint constant public minTokensForSale = 3000000e18;
-    uint constant public maxPresaleTokens = 16000000e18;
-    uint constant public futureTokens = 120000000e18;
-    uint constant public lockedTeamAllocationTokens = 16000000e18;
-    uint constant public unlockedTeamAllocationTokens = 8000000e18;
-    uint constant public totalAvailableForSale = 560000000e18;
+    uint constant public minTokensForSale  = 32000000e18;
+
+    uint constant public maxPresaleTokens             =  48000000e18;
+    uint constant public totalAvailableForSale        = 528000000e18;
+    uint constant public futureTokens                 = 120000000e18;
+    uint constant public twentyThirtyTokens           =  80000000e18;
+    uint constant public lockedTeamAllocationTokens   =  16000000e18;
+    uint constant public unlockedTeamAllocationTokens =   8000000e18;
+
     address public unlockedTeamStorageVault = 0x4162Ad6EEc341e438eAbe85f52a941B078210819;
+    address public twentyThirtyVault = 0xe72bA5c6F63Ddd395DF9582800E2821cE5a05D75;
+    address public futureSaleVault = 0xf0231160Bd1a2a2D25aed2F11B8360EbF56F6153;
+    address unsoldVault;
+
+    //Storage years
     uint constant coldStorageYears = 10;
+    uint constant futureStorageYears = 3;
+
     uint totalPresale = 0;
 
-    // Funding amount in Finney
-    uint public constant tokenPrice  = 0.00042 ether;
+    // Funding amount in ether
+    uint public constant tokenPrice  = 0.0005 ether;
 
     // Multisigwallet where the proceeds will be stored.
     address public pillarTokenFactory;
-    // Multisigwallet to unsold tokens
-    address public futureSale;
 
     uint fundingStartBlock;
     uint fundingStopBlock;
@@ -70,9 +80,19 @@ contract PillarToken is StandardToken, Ownable {
       pillarTokenFactory = _pillarTokenFactory;
       totalUsedTokens = 0;
       totalSupply = 800000000e18;
-      futureSale = _icedWallet;
+      unsoldVault = _icedWallet;
+
       //allot 8 million of the 24 million marketing tokens to an address
       balances[unlockedTeamStorageVault] = unlockedTeamAllocationTokens;
+
+      //allocate tokens for 2030 wallet locked in for 3 years
+      futureSaleAllocation = new UnsoldAllocation(futureStorageYears,futureSaleVault,futureTokens);
+      balances[address(futureSaleAllocation)] = futureTokens;
+
+      //allocate tokens for future wallet locked in for 3 years
+      twentyThirtyAllocation = new UnsoldAllocation(futureStorageYears,twentyThirtyVault,twentyThirtyTokens);
+      balances[address(twentyThirtyAllocation)] = twentyThirtyTokens;
+
       fundingMode = false;
     }
 
@@ -120,7 +140,7 @@ contract PillarToken is StandardToken, Ownable {
 
       if (totalUsedTokens < minTokensForSale) throw;
 
-      if(futureSale == address(0)) throw;
+      if(unsoldVault == address(0)) throw;
 
       // switch funding mode off
       fundingMode = false;
@@ -131,8 +151,10 @@ contract PillarToken is StandardToken, Ownable {
 
       //allocate unsold tokens to iced storage
       uint totalUnSold = numberOfTokensLeft();
-      unsoldTokens = new UnsoldAllocation(coldStorageYears,futureSale,totalUnSold);
-      balances[address(unsoldTokens)] = totalUnSold;
+      if(totalUnSold > 0) {
+        unsoldTokens = new UnsoldAllocation(coldStorageYears,unsoldVault,totalUnSold);
+        balances[address(unsoldTokens)] = totalUnSold;
+      }
 
       //transfer any balance available to Pillar Multisig Wallet
       pillarTokenFactory.transfer(this.balance);

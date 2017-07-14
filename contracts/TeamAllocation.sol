@@ -10,9 +10,9 @@ contract TeamAllocation is Ownable {
   PillarToken plr;
   mapping (address => uint) allocations;
   uint tokensCreated = 0;
-  uint constant public lockedTeamAllocationTokens = 16000000;
+  uint constant public lockedTeamAllocationTokens = 16000000e18;
   //address of the team storage vault
-  address public teamStorageVault = 0x45B0852F3fC6fB50e3898f7A38184f66efC53137;
+  address public teamStorageVault = 0x3f5D90D5Cc0652AAa40519114D007Bf119Afe1Cf;
 
   function TeamAllocation() {
     plr = PillarToken(msg.sender);
