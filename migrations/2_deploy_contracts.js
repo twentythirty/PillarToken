@@ -15,6 +15,5 @@ module.exports = function(deployer) {
   deployer.link(SafeMath,UnsoldAllocation);
   deployer.link(SafeMath,TeamAllocation);
   deployer.link(SafeMath,PillarToken);
-  deployer.deploy(TeamAllocation);
   deployer.deploy(PillarToken,tokenMultisigWallet,icedWallet);
 };
